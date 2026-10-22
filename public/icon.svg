@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8f5f36"/>
+      <stop offset="100%" stop-color="#5a381d"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe3a3"/>
+      <stop offset="50%" stop-color="#f5ba58"/>
+      <stop offset="100%" stop-color="#df8924"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- 원형 배경 (부드러운 라운드 사각 앱 아이콘) -->
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#bgGrad)" filter="url(#shadow)"/>
+
+  <!-- 책 페이지 (펼쳐진 책) -->
+  <path d="M120 340 C 180 320, 240 330, 256 360 C 272 330, 332 320, 392 340 L 392 180 C 332 160, 272 170, 256 200 C 240 170, 180 160, 120 180 Z" 
+        fill="#fffaf2" opacity="0.95"/>
+
+  <!-- 책등 및 페이지 굴곡 그림자 -->
+  <path d="M256 200 L 256 360" stroke="#8f5f36" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- 주파수 / 음파 튜닝 웨이브 (책 위로 피어오르는 지혜의 파동) -->
+  <path d="M160 140 C 200 120, 230 150, 256 130 C 282 110, 310 140, 352 120" 
+        fill="none" stroke="url(#goldGrad)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M190 100 C 220 85, 240 105, 256 95 C 272 85, 292 105, 322 90" 
+        fill="none" stroke="url(#goldGrad)" stroke-width="8" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- 중앙 반짝이는 튜닝 별빛 -->
+  <polygon points="256,60 264,80 286,84 270,98 274,120 256,108 238,120 242,98 226,84 248,80" fill="url(#goldGrad)"/>
+
+  <!-- 북마크 리본 -->
+  <path d="M340 180 L 340 280 L 325 265 L 310 280 L 310 180 Z" fill="#d97724"/>
+</svg>

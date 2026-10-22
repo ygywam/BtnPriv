@@ -553,7 +553,7 @@ export default function Home() {
                 <p className="text-xs text-stone-500 mb-4">상단 검색창에서 도서를 검색해 서재에 추가해 보세요.</p>
               </div>
             ) : (
-              <div className="book-grid">
+              <div className="book-gallery">
                 {displayedBooks.map((book) => {
                   const isDone = (book.progressRate || 0) >= 100;
                   return (
@@ -611,7 +611,7 @@ export default function Home() {
         <p>만든이. <strong>기록조율사 서울외고 조용희</strong> <a href="https://www.instagram.com/record_tuner/" target="_blank" rel="noreferrer">@record_tuner</a></p>
         <p style={{ marginTop: '10px' }}>
           <a
-            href="https://app.notion.com/p/record-tuner/Book-Tuning-36c9a42118958035be6cf82a7f33d8fb?source=copy_link"
+            href="https://app.notion.com/p/record-tuner/29d9a421189580de9e13ea639a713518"
             target="_blank"
             rel="noopener noreferrer"
             style={{ fontSize: '13px', marginRight: '14px', fontWeight: 'bold', color: 'var(--accent)' }}
@@ -757,7 +757,7 @@ export default function Home() {
                     { id: 'theme-base', name: '기본 (따뜻한 웜톤)' },
                     { id: 'theme-paper', name: '페이퍼 (종이책 감성)' },
                     { id: 'theme-forest', name: '포레스트 (차분한 녹음)' },
-                    { id: 'theme-night', name: '나이트 (심야 독서)' },
+                    { id: 'theme-notion', name: '노션 (모던 클린)' },
                   ].map((t) => (
                     <button
                       key={t.id}
@@ -795,17 +795,6 @@ export default function Home() {
                     </button>
                   ))}
                 </div>
-              </div>
-
-              <div className="pt-2 border-t border-stone-200">
-                <a
-                  href="https://app.notion.com/p/record-tuner/Book-Tuning-36c9a42118958035be6cf82a7f33d8fb?source=copy_link"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full block text-center py-2.5 px-4 bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold rounded-xl shadow transition"
-                >
-                  📚 연동된 노션 독서 기록장 페이지 열기 ↗
-                </a>
               </div>
             </div>
           </div>
