@@ -52,25 +52,24 @@ export default function ChallengeReportModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-stone-200 overflow-hidden">
+    <div className="modal">
+      <div className="modal-backdrop" onClick={onClose}></div>
+      <div className="modal-card" style={{ maxWidth: '720px', maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
         {/* 상단 바 */}
-        <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+        <div className="section-title-row" style={{ paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-600 text-white">
+              <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-orange-600 text-white">
                 Gemini 2.5 AI
               </span>
               <span className="text-xs text-stone-500 font-medium">
                 {challenge.title}
               </span>
             </div>
-            <h2 className="text-xl font-bold text-stone-900">
-              월간 독서 리포트 & 블로그 글 생성
-            </h2>
+            <h2>✨ 월간 독서 리포트 & 블로그 글</h2>
           </div>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-600 text-lg">
-            ✕
+          <button className="ghost-button" onClick={onClose}>
+            닫기
           </button>
         </div>
 

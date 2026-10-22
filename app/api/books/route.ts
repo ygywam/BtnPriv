@@ -30,7 +30,29 @@ function parseBookPage(page: any): Book {
   const insightIds = props['*문장수집']?.relation?.map((r: any) => r.id) || [];
 
   const readPages = props['*총 읽은 양']?.formula?.number || 0;
-  const progressRate = props['*완독률']?.formula?.number || 0;
+
+  // 완독률 파싱 및 계산 (노션 수식 문자열 또는 쪽수 비율)
+  let progressRate = 0;
+  const rateFormula = props['*완독률']?.formula;
+  if (rateFormula?.type === 'string' && rateFormula.string) {
+    const str = rateFormula.string;
+    const match = str.match(/(\d+)%/);
+    if (match) {
+      progressRate = parseInt(match[1], 10);
+    } else if (str.includes('✅ 완독')) {
+      progressRate = 100;
+    }
+  } else if (rateFormula?.type === 'number') {
+    progressRate = Math.round(rateFormula.number * (rateFormula.number <= 1 ? 100 : 1));
+  }
+
+  // 롤업이나 공식 수식이 0인 경우 읽은 쪽수 대비 전체 쪽수로 직접 정밀 보정
+  if (!progressRate && totalPage > 0 && readPages > 0) {
+    progressRate = Math.min(100, Math.round((readPages / totalPage) * 100));
+  }
+  if (totalPage > 0 && readPages >= totalPage) {
+    progressRate = 100;
+  }
 
   const createdAt = page.created_time || '';
 
@@ -47,7 +69,7 @@ function parseBookPage(page: any): Book {
     logIds,
     insightIds,
     readPages,
-    progressRate: Math.round(progressRate * 100), // 백분율 정수 환산
+    progressRate: Math.min(100, Math.max(0, Math.round(progressRate))),
     createdAt,
   };
 }

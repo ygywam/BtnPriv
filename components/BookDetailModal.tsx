@@ -206,79 +206,65 @@ export default function BookDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-stone-200 overflow-hidden">
+    <div className="modal">
+      <div className="modal-backdrop" onClick={onClose}></div>
+      <div className="modal-card" style={{ maxWidth: '720px', maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
         {/* 상단 헤더 */}
-        <div className="p-6 border-b border-stone-100 flex items-start justify-between bg-stone-50/50">
-          <div className="flex gap-4">
+        <div className="section-title-row" style={{ paddingBottom: '14px', borderBottom: '1px solid var(--border)' }}>
+          <div className="flex gap-4 items-center">
             {book.cover && (
               <img
                 src={book.cover}
                 alt={book.title}
-                className="w-20 h-28 object-cover rounded-xl shadow-md border border-stone-200"
+                className="w-16 h-24 object-cover rounded-xl shadow-md border border-stone-200"
               />
             )}
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold">
                   {book.progressRate || 0}% 완독
                 </span>
                 <span className="text-xs text-stone-500 font-medium">
-                  전체 {book.totalPage || '?'}쪽
+                  전체 {book.totalPage || '?'}쪽 ({book.readPages || 0}쪽 읽음)
                 </span>
               </div>
-              <h2 className="text-xl font-bold text-stone-900 leading-snug mb-1">
+              <h2 className="text-lg font-bold text-stone-900 leading-snug mb-0.5">
                 {book.title}
               </h2>
-              <p className="text-sm text-stone-600">
+              <p className="text-xs text-stone-600">
                 {book.author} · {book.publisher}
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-stone-400 hover:text-stone-600 rounded-full hover:bg-stone-100 text-lg transition"
-          >
-            ✕
+          <button className="ghost-button" onClick={onClose}>
+            닫기
           </button>
         </div>
 
         {/* 탭 네비게이션 */}
-        <div className="flex border-b border-stone-200 px-6 bg-white">
+        <div className="library-tabs" style={{ marginTop: '12px', marginBottom: '14px' }}>
           <button
             onClick={() => setActiveTab('logs')}
-            className={`py-3.5 px-4 font-semibold text-sm border-b-2 transition ${
-              activeTab === 'logs'
-                ? 'border-amber-600 text-amber-700'
-                : 'border-transparent text-stone-500 hover:text-stone-700'
-            }`}
+            className={`lib-tab-btn ${activeTab === 'logs' ? 'active' : ''}`}
           >
             독서일지 ({logs.length})
           </button>
           <button
             onClick={() => setActiveTab('insights')}
-            className={`py-3.5 px-4 font-semibold text-sm border-b-2 transition ${
-              activeTab === 'insights'
-                ? 'border-amber-600 text-amber-700'
-                : 'border-transparent text-stone-500 hover:text-stone-700'
-            }`}
+            className={`lib-tab-btn ${activeTab === 'insights' ? 'active' : ''}`}
           >
             문장수집 ({insights.length})
           </button>
           <button
             onClick={() => setActiveTab('ai')}
-            className={`py-3.5 px-4 font-semibold text-sm border-b-2 transition ${
-              activeTab === 'ai'
-                ? 'border-amber-600 text-amber-700'
-                : 'border-transparent text-stone-500 hover:text-stone-700'
-            }`}
+            className={`lib-tab-btn ${activeTab === 'ai' ? 'active' : ''}`}
           >
-            AI 독서감상문
+            AI 감상문
           </button>
         </div>
 
         {/* 탭 내용 영역 */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
           {/* 1. 독서일지 탭 */}
           {activeTab === 'logs' && (
             <div className="space-y-6">

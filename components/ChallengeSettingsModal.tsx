@@ -78,17 +78,18 @@ export default function ChallengeSettingsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-stone-200">
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-stone-100">
+    <div className="modal">
+      <div className="modal-backdrop" onClick={onClose}></div>
+      <div className="modal-card" style={{ maxWidth: '520px' }}>
+        <div className="section-title-row">
           <div>
-            <h3 className="text-lg font-bold text-stone-900">챌린지 기간 및 일수 조절</h3>
-            <p className="text-xs text-stone-500 mt-0.5">
+            <h2>⚙️ 챌린지 기간 및 일수 조절</h2>
+            <p className="subtitle">
               노션 챌린지 DB의 시작일과 희망 일수를 수정합니다.
             </p>
           </div>
-          <button onClick={onClose} className="text-stone-400 hover:text-stone-600 text-lg">
-            ✕
+          <button className="ghost-button" onClick={onClose}>
+            닫기
           </button>
         </div>
 
