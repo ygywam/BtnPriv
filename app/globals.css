@@ -70,8 +70,14 @@ body.theme-notion {
 
 * { box-sizing: border-box; }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
   background: radial-gradient(circle at top left, #fff7e8 0, var(--bg) 42%, #efe4d7 100%);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
@@ -264,17 +270,133 @@ p { margin: 0; }
   flex-shrink: 0;
 }
 
-/* 모바일 반응형 최적화 (틀어짐 방지) */
+/* 챌린지 컨트롤 및 잔디 박스 */
+.challenge-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.challenge-select {
+  font-size: 13px;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--accent);
+  background: #fff;
+  color: var(--accent-dark);
+  cursor: pointer;
+  max-width: 100%;
+}
+.challenge-btn-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.challenge-grass-box {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid rgba(143, 95, 54, 0.15);
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.challenge-grass-text {
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Emoji", monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+  letter-spacing: 1px;
+  color: var(--text-dark);
+  max-width: 100%;
+}
+
+/* 모바일 반응형 최적화 (틀어짐 및 삐져나감 완전 방지) */
 @media (max-width: 640px) {
-  .app { padding: 16px 12px 50px; }
-  .app-header { flex-direction: column; align-items: flex-start; gap: 14px; }
-  .header-nav-row { width: 100%; justify-content: flex-start; overflow-x: auto; padding-bottom: 4px; }
-  .header-nav-row button { padding: 6px 10px; font-size: 12px; }
-  .search-row { grid-template-columns: 1fr auto; }
-  .book-gallery { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .modal-card { padding: 16px; border-radius: 16px; width: 95%; }
-  .card-actions { grid-template-columns: repeat(3, 1fr); }
-  .card-actions button { padding: 6px 2px; font-size: 10px; }
-  h1 { font-size: 22px; }
-  .app-logo-icon { width: 32px; height: 32px; }
+  .app { padding: 12px 10px 40px; overflow-x: hidden; }
+  .app-header { flex-direction: column; align-items: flex-start; gap: 12px; width: 100%; }
+  
+  /* 헤더 4대 네비게이션 버튼 (1행 4열 균등 분할) */
+  .header-nav-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .header-nav-row button {
+    padding: 8px 2px;
+    font-size: 11px;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+  }
+
+  .section-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+  }
+
+  /* 챌린지 셀렉트 및 2개 버튼 정렬 */
+  .challenge-controls-row {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+  .challenge-select {
+    width: 100%;
+  }
+  .challenge-btn-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+  .challenge-btn-group button {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    padding: 9px 8px;
+    font-size: 12px;
+  }
+
+  /* 검색창 넘침 방지 */
+  .search-row {
+    display: flex;
+    width: 100%;
+    gap: 6px;
+  }
+  .search-row input {
+    flex: 1;
+    min-width: 0; /* flex 넘침 방지 필수 */
+    padding: 10px;
+    font-size: 13px;
+  }
+  .search-row button {
+    flex-shrink: 0;
+    padding: 10px 14px;
+  }
+
+  /* 도서 갤러리 및 모달 */
+  .book-gallery {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .modal-card {
+    padding: 14px;
+    border-radius: 16px;
+    width: 95%;
+    max-width: 95vw;
+    box-sizing: border-box;
+  }
+  h1 { font-size: 20px; }
+  .app-logo-icon { width: 30px; height: 30px; }
 }

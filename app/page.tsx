@@ -318,20 +318,11 @@ export default function Home() {
             </div>
 
             {/* 챌린지 선택 드롭다운 및 액션 버튼들 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <div className="challenge-controls-row">
               <select
                 value={selectedChallengeId}
                 onChange={(e) => setSelectedChallengeId(e.target.value)}
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 'bold',
-                  padding: '7px 12px',
-                  borderRadius: '12px',
-                  border: '1.5px solid var(--accent)',
-                  background: '#fff',
-                  color: 'var(--accent-dark)',
-                  cursor: 'pointer',
-                }}
+                className="challenge-select"
               >
                 {challenges.map((c, i) => (
                   <option key={c.id} value={c.id}>
@@ -340,47 +331,37 @@ export default function Home() {
                 ))}
               </select>
 
-              <button
-                className="ghost-button"
-                onClick={() => setShowPeriodModal(true)}
-                style={{ padding: '7px 14px' }}
-              >
-                ⚙️ 기간 조절
-              </button>
-              <button
-                className="accent-button"
-                onClick={() => setShowReportModal(true)}
-                style={{
-                  background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%)',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '7px 16px',
-                  borderRadius: '12px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 2px 6px rgba(143, 95, 54, 0.25)',
-                  cursor: 'pointer',
-                }}
-              >
-                ✨ AI 독서 리포트
-              </button>
+              <div className="challenge-btn-group">
+                <button
+                  className="ghost-button"
+                  onClick={() => setShowPeriodModal(true)}
+                >
+                  ⚙️ 기간 조절
+                </button>
+                <button
+                  className="accent-button"
+                  onClick={() => setShowReportModal(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    fontWeight: 'bold',
+                    boxShadow: '0 2px 6px rgba(143, 95, 54, 0.25)',
+                  }}
+                >
+                  ✨ AI 독서 리포트
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* 노션 수식 잔디 현황 바 */}
+          {/* 노션 수식 잔디 현황 바 (모바일 줄바꿈 및 넘침 방지) */}
           {currentChallenge.progressText && (
-            <div
-              style={{
-                marginTop: '14px',
-                padding: '12px 16px',
-                background: '#fff',
-                borderRadius: '12px',
-                border: '1px solid rgba(143, 95, 54, 0.15)',
-              }}
-            >
+            <div className="challenge-grass-box">
               <div style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--accent)', marginBottom: '4px' }}>
                 📊 실시간 챌린지 달성 현황 (노션 동기화)
               </div>
-              <div style={{ fontSize: '13px', fontFamily: 'monospace', whiteSpace: 'pre-line', lineHeight: '1.6', color: 'var(--text-dark)' }}>
+              <div className="challenge-grass-text">
                 {currentChallenge.progressText}
               </div>
             </div>
