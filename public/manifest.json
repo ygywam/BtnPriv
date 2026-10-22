@@ -1,0 +1,17 @@
+{
+  "name": "북튜닝 (Book Tuning) v4.3",
+  "short_name": "북튜닝",
+  "description": "책을 읽고 기록하며 내 삶과 생각의 주파수를 맞춰가는 공간",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f2eb",
+  "theme_color": "#8f5f36",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

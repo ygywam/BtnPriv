@@ -1,0 +1,28 @@
+[북튜닝 - 개인 독서 챌린지 웹앱 안내]
+
+1. 프로젝트 위치:
+   H:\내 드라이브\바이브코딩\독서기록웹앱\북튜닝-개인버전
+
+2. 핵심 연동 노션 DB (실제 개인 데이터베이스 100% 실시간 연동):
+   - 챌린지 DB: ea45d293-3236-462c-ae85-104b712b6e12 (1주 1권 챌린지)
+   - 도서 DB: 80ec125c-3e06-42ca-b116-08f8817f3498 (1주 1권 읽기 책기록)
+   - 독서일지 DB: b3064ad0-1b7b-4011-879d-ae17cd52f063 (독서일지기록)
+   - 문장수집 DB: ceb9a421-1895-82a2-9956-81700e456020 (3️⃣ 문장수집 DB)
+
+3. Vercel 배포 시 환경변수 (Settings > Environment Variables 에 등록):
+   NOTION_API_KEY=ntn_***
+   NOTION_CHALLENGE_DB_ID=ea45d293-3236-462c-ae85-104b712b6e12
+   NOTION_BOOK_DB_ID=80ec125c-3e06-42ca-b116-08f8817f3498
+   NOTION_LOG_DB_ID=b3064ad0-1b7b-4011-879d-ae17cd52f063
+   NOTION_INSIGHT_DB_ID=ceb9a421-1895-82a2-9956-81700e456020
+   GEMINI_API_KEY=AIzaSy...
+   ALADIN_API_KEY=ttb...
+   KAKAO_REST_API_KEY=...
+   NAVER_CLIENT_ID=...
+   NAVER_CLIENT_SECRET=...
+
+4. 로컬 실행 방법:
+   cd "H:\내 드라이브\바이브코딩\독서기록웹앱\북튜닝-개인버전"
+   npm install
+   npm run dev
+   -> 브라우저에서 http://localhost:3000 접속
