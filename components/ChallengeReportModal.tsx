@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Challenge } from '@/lib/types';
 
 interface ChallengeReportModalProps {
@@ -14,10 +14,43 @@ export default function ChallengeReportModal({
 }: ChallengeReportModalProps) {
   const [activeTab, setActiveTab] = useState<'report' | 'blog'>('report');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [loadingExisting, setLoadingExisting] = useState(true);
   const [reportResult, setReportResult] = useState<any | null>(null);
   const [blogResult, setBlogResult] = useState<any | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [copied, setCopied] = useState(false);
+
+  // 모달 오픈 시 노션에 기 저장된 리포트/블로그 글 확인 및 자동 복원
+  useEffect(() => {
+    fetchExistingReport();
+  }, [challenge.id]);
+
+  const fetchExistingReport = async () => {
+    setLoadingExisting(true);
+    try {
+      const res = await fetch(`/api/challenge-report?challengeId=${challenge.id}`);
+      const data = await res.json();
+      if (res.ok && data.report && data.blog) {
+        setReportResult(data.report);
+        setBlogResult(data.blog);
+        if (data.savedAt) {
+          const dateStr = new Date(data.savedAt).toLocaleDateString('ko-KR', {
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+          setStatusMessage(`📂 노션에 저장되어 있는 독서 리포트입니다. (${dateStr} 저장본)`);
+        } else {
+          setStatusMessage('📂 노션 페이지 본문에서 불러온 기존 독서 리포트입니다.');
+        }
+      }
+    } catch (e) {
+      console.warn('기존 리포트 조회 오류:', e);
+    } finally {
+      setLoadingExisting(false);
+    }
+  };
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -54,7 +87,7 @@ export default function ChallengeReportModal({
   return (
     <div className="modal">
       <div className="modal-backdrop" onClick={onClose}></div>
-      <div className="modal-card" style={{ maxWidth: '720px', maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="modal-card" style={{ maxWidth: '740px', maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
         {/* 상단 바 */}
         <div className="section-title-row" style={{ paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
           <div>
@@ -74,10 +107,10 @@ export default function ChallengeReportModal({
         </div>
 
         {/* 안내 및 생성 트리거 */}
-        <div className="p-6 border-b border-stone-200 bg-amber-50/40">
+        <div className="p-5 border-b border-stone-200 bg-amber-50/40">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="text-xs text-stone-700 leading-relaxed">
-              기존 8월 챌린지와 동일한 양식으로 <strong>[독서 리포트]</strong>와 <strong>[블로그 완성글]</strong>을 원클릭 생성하고,
+              기존 8월 챌린지와 동일한 양식으로 <strong>[독서 리포트]</strong>, <strong>[추천도서]</strong>, <strong>[블로그 완성글]</strong>을 원클릭 생성하고,
               <br />
               노션 챌린지 페이지 본문 안에 접이식 토글 블록으로 즉시 영구 저장합니다.
             </div>
@@ -107,7 +140,7 @@ export default function ChallengeReportModal({
                   : 'border-transparent text-stone-500 hover:text-stone-700'
               }`}
             >
-              📊 독서 리포트 (노션 양식)
+              📊 독서 리포트 & 추천도서
             </button>
             <button
               onClick={() => setActiveTab('blog')}
@@ -117,14 +150,19 @@ export default function ChallengeReportModal({
                   : 'border-transparent text-stone-500 hover:text-stone-700'
               }`}
             >
-              ✍️ 블로그 완성글 (에세이)
+              ✍️ 블로그 완성 에세이
             </button>
           </div>
         )}
 
         {/* 본문 뷰어 */}
         <div className="p-6 overflow-y-auto flex-1">
-          {!reportResult ? (
+          {loadingExisting ? (
+            <div className="text-center py-20 text-stone-400">
+              <div className="text-3xl mb-3 animate-spin">⏳</div>
+              <p className="text-sm">노션에 저장된 독서 리포트를 확인하고 있습니다...</p>
+            </div>
+          ) : !reportResult ? (
             <div className="text-center py-20 text-stone-400">
               <div className="text-4xl mb-3">📝</div>
               <p className="text-sm">
@@ -177,6 +215,37 @@ export default function ChallengeReportModal({
                   {reportResult.reflection}
                 </p>
               </div>
+
+              {/* 추천도서 (3~4권) */}
+              {reportResult.recommendedBooks && reportResult.recommendedBooks.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-bold text-stone-800 mb-3 flex items-center gap-1.5">
+                    <span>📚</span> 3 · 추천도서 — 다음 독서를 위한 제안
+                  </h4>
+                  <div className="space-y-3">
+                    {reportResult.recommendedBooks.map((book: any, idx: number) => (
+                      <div key={idx} className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-200/80 shadow-sm">
+                        <div className="flex items-baseline gap-2 mb-2">
+                          <span className="font-bold text-sm text-stone-900">📖 {book.title}</span>
+                          {book.author && (
+                            <span className="text-xs text-stone-500 font-medium">({book.author})</span>
+                          )}
+                        </div>
+                        {book.description && (
+                          <p className="text-xs text-stone-700 leading-relaxed mb-2">
+                            <strong className="text-stone-900">내용:</strong> {book.description}
+                          </p>
+                        )}
+                        {book.reason && (
+                          <div className="p-2.5 bg-white/90 rounded-lg text-xs text-emerald-950 leading-relaxed border border-emerald-100">
+                            <strong>💡 추천 이유:</strong> {book.reason}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-6">

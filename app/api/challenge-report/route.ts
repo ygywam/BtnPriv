@@ -3,8 +3,240 @@ import { notion, NOTION_BOOK_DB_ID, NOTION_LOG_DB_ID, NOTION_INSIGHT_DB_ID } fro
 import { parseChallengePage } from '@/lib/challengeHelper';
 import { callGemini } from '@/lib/gemini';
 
+export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // AI 생성 및 노션 블록 생성을 위한 충분한 시간
 
+// 긴 문자열을 노션 rich_text 2000자 한도 미만 조각들로 분할
+function chunkString(str: string, size = 1900): string[] {
+  const chunks: string[] = [];
+  for (let i = 0; i < str.length; i += size) {
+    chunks.push(str.slice(i, i + size));
+  }
+  return chunks.length ? chunks : [''];
+}
+
+// 1. GET: 기존에 노션에 저장된 챌린지 리포트 및 블로그 글 조회
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const challengeId = searchParams.get('challengeId');
+
+    if (!challengeId) {
+      return NextResponse.json({ ok: false, error: 'challengeId가 필요합니다.' }, { status: 400 });
+    }
+
+    const blocksRes = await notion.blocks.children.list({
+      block_id: challengeId,
+      page_size: 100,
+    });
+
+    const blocks = blocksRes.results as any[];
+
+    // 1-1. 우선순위: challenge-report-json 메타데이터 코드 블록 확인 (100% 손실 없는 즉시 복원)
+    for (const b of blocks) {
+      if (b.type === 'code') {
+        const captionText = b.code?.caption?.map((c: any) => c.plain_text).join('') || '';
+        if (captionText.includes('challenge-report-json')) {
+          try {
+            const rawJson = b.code?.rich_text?.map((r: any) => r.plain_text).join('') || '';
+            const data = JSON.parse(rawJson);
+            if (data.report && data.blog) {
+              return NextResponse.json({
+                ok: true,
+                report: data.report,
+                blog: data.blog,
+                savedAt: data.savedAt || null,
+              });
+            }
+          } catch (jsonErr) {
+            console.warn('메타데이터 코드 블록 파싱 오류:', jsonErr);
+          }
+        }
+      }
+    }
+
+    // 1-2. 보조 복원: 노션의 접이식 토글 블록(독서 리포트 & 블로그 완성글)을 파싱하여 복원
+    let reportToggleBlock: any = null;
+    let blogToggleBlock: any = null;
+
+    for (const b of blocks) {
+      if (b.type === 'toggle') {
+        const toggleTitle = b.toggle?.rich_text?.map((t: any) => t.plain_text).join('') || '';
+        if (toggleTitle.includes('독서 리포트') || toggleTitle.includes('리포트')) {
+          reportToggleBlock = b;
+        } else if (toggleTitle.includes('블로그') || toggleTitle.includes('에세이')) {
+          blogToggleBlock = b;
+        }
+      }
+    }
+
+    if (!reportToggleBlock && !blogToggleBlock) {
+      return NextResponse.json({ ok: true, report: null, blog: null });
+    }
+
+    let parsedReport: any = null;
+    let parsedBlog: any = null;
+
+    // 독서 리포트 토글 자식 블록들 파싱
+    if (reportToggleBlock) {
+      try {
+        const rChildren = await notion.blocks.children.list({
+          block_id: reportToggleBlock.id,
+          page_size: 100,
+        });
+
+        let summary = '';
+        let statsText = '';
+        const insightsSelection: any[] = [];
+        let reflection = '';
+        const recommendedBooks: any[] = [];
+
+        let currentSection: 'header' | 'insights' | 'reflection' | 'recommend' | null = 'header';
+        let currentQuote: string = '';
+
+        for (const child of rChildren.results as any[]) {
+          const cType = child.type;
+          const text = child[cType]?.rich_text?.map((t: any) => t.plain_text).join('') || '';
+
+          if (text.includes('1 · 인사이트 셀렉션')) {
+            currentSection = 'insights';
+            continue;
+          }
+          if (text.includes('2 · 독서 키워드와 성찰') || text.includes('사유의 흐름')) {
+            currentSection = 'reflection';
+            continue;
+          }
+          if (text.includes('추천도서')) {
+            currentSection = 'recommend';
+            continue;
+          }
+
+          if (currentSection === 'header') {
+            if (text.startsWith('📊 성과:')) {
+              statsText = text.replace('📊 성과:', '').trim();
+            } else if (!summary && text.trim()) {
+              summary = text.trim();
+            }
+          } else if (currentSection === 'insights') {
+            if (cType === 'quote') {
+              currentQuote = text.trim();
+            } else if (cType === 'paragraph' && currentQuote) {
+              const lines = text.split('\n');
+              const bookInfo = lines[0]?.replace(/^[—\-]\s*/, '').trim() || '';
+              const commentary = lines.slice(1).join('\n').trim() || lines[0] || '';
+              insightsSelection.push({
+                quote: currentQuote,
+                bookInfo,
+                commentary,
+              });
+              currentQuote = '';
+            }
+          } else if (currentSection === 'reflection') {
+            if (text.trim()) {
+              reflection = (reflection ? reflection + '\n\n' : '') + text.trim();
+            }
+          } else if (currentSection === 'recommend') {
+            if (text.trim()) {
+              const lines = text.split('\n');
+              const titleLine = lines[0] || '';
+              const descLine = lines.find((l: string) => l.includes('내용:')) || '';
+              const reasonLine = lines.find((l: string) => l.includes('추천 이유:')) || '';
+
+              if (descLine || reasonLine) {
+                const titleMatch = titleLine.match(/📖?\s*(.*?)\s*\((.*?)\)/);
+                recommendedBooks.push({
+                  title: titleMatch ? titleMatch[1].trim() : titleLine.replace(/^📖\s*/, '').trim(),
+                  author: titleMatch ? titleMatch[2].trim() : '',
+                  description: descLine.replace(/^[•\-\s]*내용:\s*/, '').trim(),
+                  reason: reasonLine.replace(/^[•\-\s]*추천 이유:\s*/, '').trim(),
+                });
+              } else if (text.includes('—') || text.includes('·')) {
+                // 구 양식: 제목 · 저자 — 내용 및 이유
+                const parts = text.split('—');
+                const header = parts[0] || '';
+                const body = parts.slice(1).join('—').trim();
+                const subParts = header.split('·');
+                const bTitle = subParts[0]?.replace(/^📖\s*/, '').trim() || '';
+                const bAuthor = subParts[1]?.trim() || '';
+                recommendedBooks.push({
+                  title: bTitle,
+                  author: bAuthor,
+                  description: '',
+                  reason: body,
+                });
+              } else {
+                recommendedBooks.push({
+                  title: text.replace(/^📖\s*/, '').trim(),
+                  author: '',
+                  description: '',
+                  reason: '',
+                });
+              }
+            }
+          }
+        }
+
+        parsedReport = {
+          summary: summary || '노션에 저장된 독서 리포트입니다.',
+          statsText,
+          insightsSelection,
+          reflection,
+          recommendedBooks,
+        };
+      } catch (err) {
+        console.warn('리포트 토글 파싱 실패:', err);
+      }
+    }
+
+    // 블로그 완성글 토글 자식 블록들 파싱
+    if (blogToggleBlock) {
+      try {
+        const bChildren = await notion.blocks.children.list({
+          block_id: blogToggleBlock.id,
+          page_size: 100,
+        });
+
+        const hookingTitles: string[] = [];
+        let mainTitle = '';
+        const essayParagraphs: string[] = [];
+        let isEssaySection = false;
+
+        for (const child of bChildren.results as any[]) {
+          const cType = child.type;
+          const text = child[cType]?.rich_text?.map((t: any) => t.plain_text).join('') || '';
+
+          if (cType === 'bulleted_list_item' || cType === 'numbered_list_item') {
+            hookingTitles.push(text.trim());
+          } else if (cType === 'heading_2' && !mainTitle) {
+            mainTitle = text.trim();
+            isEssaySection = true;
+          } else if (isEssaySection && cType === 'paragraph' && text.trim()) {
+            essayParagraphs.push(text.trim());
+          }
+        }
+
+        parsedBlog = {
+          hookingTitles,
+          mainTitle: mainTitle || '독서 에세이',
+          essayContent: essayParagraphs.join('\n\n'),
+        };
+      } catch (err) {
+        console.warn('블로그 토글 파싱 실패:', err);
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      report: parsedReport,
+      blog: parsedBlog,
+    });
+  } catch (error: any) {
+    console.error('챌린지 리포트 조회 오류:', error);
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+}
+
+// 2. POST: Gemini AI를 통한 챌린지 리포트 및 블로그 글 신규 생성 및 노션 영구 저장
 export async function POST(req: NextRequest) {
   try {
     const { challengeId } = await req.json();
@@ -77,12 +309,13 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // 5. Gemini 프롬프트 구성 (노션 8월 챌린지 본문 양식 완벽 반영)
+    // 5. Gemini 프롬프트 구성 (추천도서 3~4권 포함)
     const prompt = `
 당신은 대한민국 최고의 독서 멘토이자 전문 독서 에세이 작가입니다.
-사용자가 이번 독서 챌린지 동안 노션에 기록한 도서 목록, 일자별 독서일지, 문장수집 데이터를 바탕으로 두 가지 결과물을 작성해야 합니다:
+사용자가 이번 독서 챌린지 동안 노션에 기록한 도서 목록, 일자별 독서일지, 문장수집 데이터를 바탕으로 세 가지 핵심 결과물을 작성해야 합니다:
 1. '독서 리포트': 이번 챌린지의 총평, 핵심 통계 요약, 인상적인 문장들과 사유(인사이트 셀렉션), 키워드와 성찰
-2. '블로그 완성글': 블로그나 브런치에 바로 발행할 수 있는 후킹 제목 후보 4개와 깊이 있는 사유가 담긴 완성형 독서 에세이 본문
+2. '추천도서 (3~4권)': 이번 챌린지에서 읽은 도서들의 주제와 질문, 사용자의 생각을 심화하고 확장할 수 있는 실제 대한민국에 출판된 추천 도서 3~4권 (도서명, 저자, 핵심 내용, 읽은 책들과의 연결점 및 구체적 추천 이유)
+3. '블로그 완성글': 블로그나 브런치에 바로 발행할 수 있는 후킹 제목 후보 4개와 깊이 있는 사유가 담긴 완성형 독서 에세이 본문
 
 [챌린지 정보]
 - 챌린지 이름: ${challenge.title}
@@ -97,7 +330,7 @@ ${logs.map((l) => `- [${l.date}] 《${l.bookTitle}》 ${l.page}p: ${l.content}`)
 [수집한 문장 및 나의 생각들]
 ${insights.map((s) => `- 《${s.bookTitle}》 (${s.page ? s.page + 'p' : s.date}): "${s.quote}"`).join('\n\n')}
 
-반드시 아래 JSON 형식으로만 응답해 주세요. 다른 설명 없이 유효한 JSON만 출력해야 합니다:
+반드시 아래 JSON 형식으로만 응답해 주세요. 가공되지 않은 순수 JSON 코드 블록만 출력해야 합니다:
 \`\`\`json
 {
   "report": {
@@ -110,7 +343,15 @@ ${insights.map((s) => `- 《${s.bookTitle}》 (${s.page ? s.page + 'p' : s.date}
         "commentary": "이 문장에 담긴 의미와 사용자의 메모를 결합한 깊은 해설 성찰"
       }
     ],
-    "reflection": "이번 챌린지를 관통하는 중심 키워드 2~3개와 앞으로의 삶과 사유로 확장되는 성찰 제언"
+    "reflection": "이번 챌린지를 관통하는 중심 키워드 2~3개와 앞으로의 삶과 사유로 확장되는 성찰 제언",
+    "recommendedBooks": [
+      {
+        "title": "실제 출간된 책 제목 (정확한 한국어 도서명)",
+        "author": "저자명",
+        "description": "이 책의 핵심 내용과 주제 요약 (2~3문장)",
+        "reason": "이번 챌린지에서 읽은 책(${books.map((b) => b.title).join(', ')})과 사유의 흐름에 비추어 이 책을 추천하는 구체적인 이유"
+      }
+    ]
   },
   "blog": {
     "hookingTitles": [
@@ -120,7 +361,7 @@ ${insights.map((s) => `- 《${s.bookTitle}》 (${s.page ? s.page + 'p' : s.date}
       "후킹 제목 후보 4"
     ],
     "mainTitle": "블로그 에세이 대표 제목",
-    "essayContent": "소제목과 함께 풍부한 사유와 개인적 성찰이 녹아든 완성된 블로그 에세이 본문 (줄바꿈 포함 마크다운 형식)"
+    "essayContent": "소제목과 함께 풍부한 사유와 개인적 성찰이 녹아든 완성된 블로그 에세이 본문 (줄바꿈 포함 완성글)"
   }
 }
 \`\`\`
@@ -141,8 +382,40 @@ ${insights.map((s) => `- 《${s.bookTitle}》 (${s.page ? s.page + 'p' : s.date}
 
     const { report, blog } = parsedData;
 
-    // 7. 노션 챌린지 페이지 본문에 2개의 토글 블록 생성
-    // 7-1. 토글 1: 독서 리포트
+    // 7. 기존에 저장되었던 챌린지 리포트 토글 및 메타데이터 블록 정리 (중복 생성 방지)
+    try {
+      const existingBlocks = await notion.blocks.children.list({
+        block_id: challengeId,
+        page_size: 100,
+      });
+
+      for (const b of existingBlocks.results as any[]) {
+        if (b.type === 'toggle') {
+          const tText = b.toggle?.rich_text?.map((t: any) => t.plain_text).join('') || '';
+          if (tText.includes('독서 리포트') || tText.includes('블로그 완성글')) {
+            try {
+              await notion.blocks.delete({ block_id: b.id });
+            } catch (delErr) {
+              console.warn('기존 리포트 토글 삭제 실패:', b.id, delErr);
+            }
+          }
+        } else if (b.type === 'code') {
+          const cText = b.code?.caption?.map((c: any) => c.plain_text).join('') || '';
+          if (cText.includes('challenge-report-json')) {
+            try {
+              await notion.blocks.delete({ block_id: b.id });
+            } catch (delErr) {
+              console.warn('기존 메타데이터 코드 블록 삭제 실패:', b.id, delErr);
+            }
+          }
+        }
+      }
+    } catch (cleanErr) {
+      console.warn('기존 리포트 블록 정리 오류:', cleanErr);
+    }
+
+    // 8. 노션 챌린지 페이지 본문에 자식 블록 구성
+    // 8-1. 토글 1: 독서 리포트
     const reportChildrenBlocks: any[] = [
       {
         object: 'block',
@@ -204,7 +477,32 @@ ${insights.map((s) => `- 《${s.bookTitle}》 (${s.page ? s.page + 'p' : s.date}
       },
     });
 
-    // 7-2. 토글 2: 블로그 완성글
+    // 8-2. 추천도서 3~4권 섹션 추가
+    if (report.recommendedBooks && Array.isArray(report.recommendedBooks) && report.recommendedBooks.length > 0) {
+      reportChildrenBlocks.push({
+        object: 'block',
+        type: 'heading_2',
+        heading_2: {
+          rich_text: [{ type: 'text', text: { content: '3 · 추천도서 — 다음 독서를 위한 제안' } }],
+        },
+      });
+
+      for (const b of report.recommendedBooks) {
+        reportChildrenBlocks.push({
+          object: 'block',
+          type: 'paragraph',
+          paragraph: {
+            rich_text: [
+              { type: 'text', text: { content: `📖 ${b.title} ` }, annotations: { bold: true } },
+              { type: 'text', text: { content: `(${b.author})\n` }, annotations: { italic: true, color: 'gray' } },
+              { type: 'text', text: { content: `• 내용: ${b.description || ''}\n• 추천 이유: ${b.reason || ''}` } },
+            ],
+          },
+        });
+      }
+    }
+
+    // 8-3. 토글 2: 블로그 완성글
     const blogChildrenBlocks: any[] = [
       {
         object: 'block',
@@ -236,7 +534,6 @@ ${insights.map((s) => `- 《${s.bookTitle}》 (${s.page ? s.page + 'p' : s.date}
       },
     });
 
-    // 본문 문단들 나누어 추가 (1000자 초과 방지)
     const essayParagraphs = (blog.essayContent || '').split('\n\n').filter(Boolean);
     for (const p of essayParagraphs) {
       blogChildrenBlocks.push({
@@ -248,7 +545,15 @@ ${insights.map((s) => `- 《${s.bookTitle}》 (${s.page ? s.page + 'p' : s.date}
       });
     }
 
-    // 8. 노션 본문에 2개 토글 블록 append
+    // 8-4. 웹앱 즉각 복원용 JSON 데이터 메타데이터 블록 구성 (최대 2000자 단위 분할)
+    const jsonPayload = JSON.stringify({
+      savedAt: new Date().toISOString(),
+      report,
+      blog,
+    });
+    const jsonChunks = chunkString(jsonPayload, 1900);
+
+    // 9. 노션 본문에 2개 토글 블록 및 메타데이터 블록 append
     await notion.blocks.children.append({
       block_id: challengeId,
       children: [
@@ -257,7 +562,7 @@ ${insights.map((s) => `- 《${s.bookTitle}》 (${s.page ? s.page + 'p' : s.date}
           type: 'toggle',
           toggle: {
             rich_text: [{ type: 'text', text: { content: `📊 ${challenge.title} 독서 리포트` } }],
-            children: reportChildrenBlocks.slice(0, 95), // 노션 최대 자식 한도 100개
+            children: reportChildrenBlocks.slice(0, 95),
           },
         },
         {
@@ -268,6 +573,18 @@ ${insights.map((s) => `- 《${s.bookTitle}》 (${s.page ? s.page + 'p' : s.date}
             children: blogChildrenBlocks.slice(0, 95),
           },
         },
+        {
+          object: 'block',
+          type: 'code',
+          code: {
+            caption: [{ type: 'text', text: { content: 'challenge-report-json' } }],
+            language: 'json',
+            rich_text: jsonChunks.map((chunk) => ({
+              type: 'text',
+              text: { content: chunk },
+            })),
+          },
+        },
       ],
     });
 
@@ -275,7 +592,7 @@ ${insights.map((s) => `- 《${s.bookTitle}》 (${s.page ? s.page + 'p' : s.date}
       success: true,
       report,
       blog,
-      message: '노션 챌린지 페이지 본문에 독서 리포트 및 블로그 완성글이 토글 블록으로 저장되었습니다.',
+      message: '노션 챌린지 페이지 본문에 독서 리포트, 추천도서 및 블로그 완성글이 안전하게 저장되었습니다.',
     });
   } catch (error: any) {
     console.error('챌린지 리포트 생성 오류:', error);

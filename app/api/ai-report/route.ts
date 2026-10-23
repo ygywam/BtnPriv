@@ -1,6 +1,50 @@
 import { NextResponse } from 'next/server';
 import { notion, NOTION_LOG_DB_ID as LOG_DB_ID, NOTION_INSIGHT_DB_ID as INSIGHT_DB_ID } from '@/lib/notion';
 
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const bookId = searchParams.get('bookId');
+
+    if (!bookId) {
+      return NextResponse.json({ ok: false, error: 'bookId가 필요합니다.' }, { status: 400 });
+    }
+
+    const blocksRes = await notion.blocks.children.list({ block_id: bookId, page_size: 100 });
+    let isAiSection = false;
+    const aiLines: string[] = [];
+
+    for (const block of blocksRes.results as any[]) {
+      const type = block.type;
+      const text = (block[type]?.rich_text || []).map((t: any) => t.plain_text).join('');
+
+      if (text.includes('Gemini AI 감상문')) {
+        isAiSection = true;
+        continue;
+      }
+
+      if (isAiSection) {
+        if (type.startsWith('heading_')) {
+          break;
+        }
+        if (text.trim()) {
+          aiLines.push(text.trim());
+        }
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      aiReport: aiLines.join('\n\n'),
+    });
+  } catch (error: any) {
+    console.error('AI 감상문 조회 오류:', error);
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { bookTitle, author, readingLogs: clientReadingLogs, pageLogs: clientPageLogs, notionPageId, notes: clientNotes } = await request.json();
@@ -82,9 +126,39 @@ ${pageSummary || '없음'}
     const data = await res.json();
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-    // 노션 해당 도서 페이지 본문에 감상문 블록 추가
+    // 노션 해당 도서 페이지 본문에 감상문 블록 추가 (기존 블록 정리 후 새 블록 추가)
     if (notionPageId && generatedText) {
       try {
+        const existingBlocks = await notion.blocks.children.list({ block_id: notionPageId, page_size: 100 });
+        let isAiSection = false;
+        const blocksToDelete: string[] = [];
+
+        for (const block of existingBlocks.results as any[]) {
+          const type = block.type;
+          const text = (block[type]?.rich_text || []).map((t: any) => t.plain_text).join('');
+
+          if (text.includes('Gemini AI 감상문')) {
+            isAiSection = true;
+            blocksToDelete.push(block.id);
+            continue;
+          }
+
+          if (isAiSection) {
+            if (type.startsWith('heading_')) {
+              break;
+            }
+            blocksToDelete.push(block.id);
+          }
+        }
+
+        for (const bid of blocksToDelete) {
+          try {
+            await notion.blocks.delete({ block_id: bid });
+          } catch (delErr) {
+            console.warn('기존 감상문 블록 삭제 실패:', bid, delErr);
+          }
+        }
+
         const paragraphs = generatedText.split('\n').filter((p: string) => p.trim() !== '');
         const blocks = [
           {

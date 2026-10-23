@@ -85,12 +85,14 @@ export default function BookDetailModal({
   const loadBookItems = async () => {
     setLoadingItems(true);
     try {
-      const [resLogs, resInsights] = await Promise.all([
+      const [resLogs, resInsights, resAi] = await Promise.all([
         fetch(`/api/logs?bookId=${book.id}`).then((r) => r.json()),
         fetch(`/api/insights?bookId=${book.id}`).then((r) => r.json()),
+        fetch(`/api/ai-report?bookId=${book.id}`).then((r) => r.json()),
       ]);
       if (resLogs.logs) setLogs(resLogs.logs);
       if (resInsights.insights) setInsights(resInsights.insights);
+      if (resAi && resAi.ok && resAi.aiReport) setAiReport(resAi.aiReport);
     } catch (e) {
       console.error('기록 로드 실패:', e);
     } finally {
