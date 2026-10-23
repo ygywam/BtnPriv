@@ -375,7 +375,7 @@ export default function Home() {
           <div>
             <h2>도서 검색 및 추가</h2>
             <p className="subtitle">
-              현재 검색 엔진: <b>{searchApiType === 'aladin' ? '알라딘 (쪽수 100% 자동)' : searchApiType === 'kakao' ? '카카오 도서' : '네이버 도서'}</b> (설정에서 변경 가능)
+              현재 검색 엔진: <b>{searchApiType === 'aladin' ? '알라딘 (쪽수 100% 자동)' : searchApiType === 'kakao' ? '카카오 도서' : '네이버 도서'}</b>
             </p>
           </div>
           <button
@@ -390,7 +390,7 @@ export default function Home() {
         <div className="search-row">
           <input
             type="text"
-            placeholder="도서명, 저자, 또는 ISBN 검색 (예: 어린왕자, 979...)"
+            placeholder=""
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -450,7 +450,7 @@ export default function Home() {
             className={`lib-tab-btn ${activeTab === 'challenge' ? 'active' : ''}`}
             onClick={() => setActiveTab('challenge')}
           >
-            🎯 이번 챌린지 도서 ({currentChallenge ? books.filter((b) => b.challengeIds.includes(currentChallenge.id)).length : 0})
+            🎯 챌린지 ({currentChallenge ? books.filter((b) => b.challengeIds.includes(currentChallenge.id)).length : 0})
           </button>
           <button
             className={`lib-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
@@ -462,7 +462,7 @@ export default function Home() {
             className={`lib-tab-btn ${activeTab === 'feed' ? 'active' : ''}`}
             onClick={() => setActiveTab('feed')}
           >
-            📝 독서일지 & 문장 피드
+            📝 독서일지 피드
           </button>
         </div>
 

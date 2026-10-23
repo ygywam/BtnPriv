@@ -18,7 +18,8 @@ export default function BookDetailModal({
   onClose,
   onRefresh,
 }: BookDetailModalProps) {
-  const [activeTab, setActiveTab] = useState<'logs' | 'insights' | 'ai'>('logs');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'ai'>('timeline');
+  const [activeForm, setActiveForm] = useState<'none' | 'log' | 'insight'>('none');
   const [logs, setLogs] = useState<ReadingLog[]>([]);
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
@@ -124,12 +125,26 @@ export default function BookDetailModal({
       setLogContent('');
       setLogPage('');
       setLogImageUrl('');
+      setActiveForm('none');
       await loadBookItems();
       onRefresh();
     } catch (err: any) {
       alert(err.message || '일지 작성 중 오류 발생');
     } finally {
       setSubmittingLog(false);
+    }
+  };
+
+  // 독서일지 삭제 (노션 아카이브)
+  const handleDeleteLog = async (logId: string) => {
+    if (!confirm('이 독서일지를 삭제하시겠습니까?\n노션 데이터베이스에서도 삭제(아카이브)됩니다.')) return;
+    try {
+      const res = await fetch(`/api/logs?id=${logId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('삭제 실패');
+      setLogs((prev) => prev.filter((l) => l.id !== logId));
+      onRefresh();
+    } catch (err: any) {
+      alert('일지 삭제 오류: ' + err.message);
     }
   };
 
@@ -160,12 +175,26 @@ export default function BookDetailModal({
       setInsightQuote('');
       setInsightPage('');
       setInsightImageUrl('');
+      setActiveForm('none');
       await loadBookItems();
       onRefresh();
     } catch (err: any) {
       alert(err.message || '문장수집 중 오류 발생');
     } finally {
       setSubmittingInsight(false);
+    }
+  };
+
+  // 문장수집 삭제 (노션 아카이브)
+  const handleDeleteInsight = async (insightId: string) => {
+    if (!confirm('이 문장 수집을 삭제하시겠습니까?\n노션 데이터베이스에서도 삭제(아카이브)됩니다.')) return;
+    try {
+      const res = await fetch(`/api/insights?id=${insightId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('삭제 실패');
+      setInsights((prev) => prev.filter((i) => i.id !== insightId));
+      onRefresh();
+    } catch (err: any) {
+      alert('문장수집 삭제 오류: ' + err.message);
     }
   };
 
@@ -296,209 +325,338 @@ export default function BookDetailModal({
         {/* 탭 네비게이션 */}
         <div className="library-tabs" style={{ marginTop: '12px', marginBottom: '14px' }}>
           <button
-            onClick={() => setActiveTab('logs')}
-            className={`lib-tab-btn ${activeTab === 'logs' ? 'active' : ''}`}
+            onClick={() => setActiveTab('timeline')}
+            className={`lib-tab-btn ${activeTab === 'timeline' ? 'active' : ''}`}
           >
-            독서일지 ({logs.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('insights')}
-            className={`lib-tab-btn ${activeTab === 'insights' ? 'active' : ''}`}
-          >
-            문장수집 ({insights.length})
+            통합 타임라인 ({logs.length + insights.length})
           </button>
           <button
             onClick={() => setActiveTab('ai')}
             className={`lib-tab-btn ${activeTab === 'ai' ? 'active' : ''}`}
           >
-            AI 감상문
+            ✨ AI 감상문
           </button>
         </div>
 
         {/* 탭 내용 영역 */}
         <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
-          {/* 1. 독서일지 탭 */}
-          {activeTab === 'logs' && (
-            <div className="space-y-6">
-              {/* 일지 작성 폼 */}
-              <form onSubmit={handleSubmitLog} className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-stone-700">새 독서일지 작성</span>
-                  <label className="text-xs font-semibold text-amber-700 hover:text-amber-800 cursor-pointer flex items-center gap-1">
-                    <span>📷 사진 본문 인식(OCR)</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) handlePhotoOcr(e.target.files[0], 'log');
-                      }}
-                      disabled={isOcrProcessing}
-                    />
-                  </label>
-                </div>
+          {/* 1. 통합 타임라인 탭 (독서일지 + 문장수집 한눈에 보기) */}
+          {activeTab === 'timeline' && (
+            <div className="space-y-4">
+              {/* 상단 간편 등록 버튼 (2버튼 체제) */}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveForm((prev) => (prev === 'log' ? 'none' : 'log'))}
+                  className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm ${
+                    activeForm === 'log'
+                      ? 'bg-amber-700 text-white shadow-inner'
+                      : 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300/80'
+                  }`}
+                >
+                  <span>📖</span>
+                  <span>{activeForm === 'log' ? '독서일지 폼 닫기' : '+ 독서일지 작성'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveForm((prev) => (prev === 'insight' ? 'none' : 'insight'))}
+                  className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm ${
+                    activeForm === 'insight'
+                      ? 'bg-emerald-700 text-white shadow-inner'
+                      : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300/80'
+                  }`}
+                >
+                  <span>💡</span>
+                  <span>{activeForm === 'insight' ? '문장수집 폼 닫기' : '+ 문장수집 작성'}</span>
+                </button>
+              </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-stone-500 mb-1">읽은 날짜</label>
-                    <input
-                      type="date"
-                      value={logDate}
-                      onChange={(e) => setLogDate(e.target.value)}
-                      className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-stone-500 mb-1">읽은 페이지 (누적)</label>
-                    <input
-                      type="number"
-                      placeholder={`최대 ${book.totalPage || ''}p`}
-                      value={logPage}
-                      onChange={(e) => setLogPage(e.target.value ? Number(e.target.value) : '')}
-                      className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <textarea
-                    rows={3}
-                    placeholder="오늘 읽은 내용과 나의 생각을 자유롭게 남겨보세요..."
-                    value={logContent}
-                    onChange={(e) => setLogContent(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
-                    required
-                  ></textarea>
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={submittingLog || isOcrProcessing}
-                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl shadow transition disabled:opacity-50"
-                  >
-                    {submittingLog ? '저장 중...' : '독서일지 저장'}
-                  </button>
-                </div>
-              </form>
-
-              {/* 일지 목록 */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-stone-600 uppercase tracking-wider">
-                  기록된 독서일지
-                </h4>
-                {logs.length === 0 ? (
-                  <p className="text-sm text-stone-400 py-4 text-center">아직 작성된 독서일지가 없습니다.</p>
-                ) : (
-                  logs.map((l) => (
-                    <div key={l.id} className="p-4 bg-white rounded-xl border border-stone-200 shadow-sm">
-                      <div className="flex items-center justify-between text-xs text-stone-500 mb-1.5">
-                        <span className="font-semibold text-amber-700">{l.date}</span>
-                        <span className="bg-stone-100 px-2 py-0.5 rounded text-stone-600 font-mono">
-                          {l.page}p
-                        </span>
-                      </div>
-                      <p className="text-sm text-stone-800 whitespace-pre-line leading-relaxed">
-                        {l.content}
-                      </p>
+              {/* A. 독서일지 작성 폼 (열렸을 때) */}
+              {activeForm === 'log' && (
+                <form onSubmit={handleSubmitLog} className="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 space-y-3 animate-fadeIn">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-950 flex items-center gap-1">
+                      <span>📖</span> 새 독서일지 작성
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-semibold text-amber-700 hover:text-amber-800 cursor-pointer flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-amber-200">
+                        <span>📷 사진 본문 인식(OCR)</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) handlePhotoOcr(e.target.files[0], 'log');
+                          }}
+                          disabled={isOcrProcessing}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setActiveForm('none')}
+                        className="text-xs text-stone-400 hover:text-stone-700 px-1.5 py-0.5"
+                      >
+                        ✕
+                      </button>
                     </div>
-                  ))
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-stone-600 mb-1">읽은 날짜</label>
+                      <input
+                        type="date"
+                        value={logDate}
+                        onChange={(e) => setLogDate(e.target.value)}
+                        className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-stone-600 mb-1">읽은 페이지 (누적 쪽수)</label>
+                      <input
+                        type="number"
+                        placeholder={`최대 ${book.totalPage || ''}p`}
+                        value={logPage}
+                        onChange={(e) => setLogPage(e.target.value ? Number(e.target.value) : '')}
+                        className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <textarea
+                      rows={3}
+                      placeholder="오늘 읽은 내용과 나의 생각을 자유롭게 남겨보세요..."
+                      value={logContent}
+                      onChange={(e) => setLogContent(e.target.value)}
+                      className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                      required
+                    ></textarea>
+                  </div>
+
+                  {logImageUrl && (
+                    <div className="flex items-center gap-2 p-2 bg-white rounded-xl border border-amber-300">
+                      <img src={logImageUrl} alt="첨부 사진" className="w-12 h-12 object-cover rounded-lg border" />
+                      <span className="text-xs text-amber-900 font-medium flex-1">📷 사진 첨부됨 (노션 본문에도 영구 저장)</span>
+                      <button type="button" onClick={() => setLogImageUrl('')} className="text-xs text-stone-500 hover:text-stone-800 px-2 py-1 bg-stone-100 rounded border">사진 취소</button>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setActiveForm('none')}
+                      className="px-3 py-1.5 text-xs text-stone-500 hover:text-stone-800"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submittingLog || isOcrProcessing}
+                      className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow transition disabled:opacity-50"
+                    >
+                      {submittingLog ? '저장 중...' : '독서일지 저장'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* B. 문장수집 작성 폼 (열렸을 때) */}
+              {activeForm === 'insight' && (
+                <form onSubmit={handleSubmitInsight} className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 space-y-3 animate-fadeIn">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-emerald-950 flex items-center gap-1">
+                      <span>💡</span> 새 문장 수집하기
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-semibold text-emerald-800 hover:text-emerald-900 cursor-pointer flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-emerald-200">
+                        <span>📷 책 본문 촬영(OCR)</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) handlePhotoOcr(e.target.files[0], 'insight');
+                          }}
+                          disabled={isOcrProcessing}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setActiveForm('none')}
+                        className="text-xs text-stone-400 hover:text-stone-700 px-1.5 py-0.5"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-stone-600 mb-1">페이지 번호</label>
+                      <input
+                        type="text"
+                        placeholder="예: p.124"
+                        value={insightPage}
+                        onChange={(e) => setInsightPage(e.target.value)}
+                        className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-stone-600 mb-1">수집 날짜</label>
+                      <input
+                        type="date"
+                        value={insightDate}
+                        onChange={(e) => setInsightDate(e.target.value)}
+                        className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <textarea
+                      rows={4}
+                      placeholder="기억하고 싶은 인상 깊은 문장과 나의 단상을 입력하세요..."
+                      value={insightQuote}
+                      onChange={(e) => setInsightQuote(e.target.value)}
+                      className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                      required
+                    ></textarea>
+                  </div>
+
+                  {insightImageUrl && (
+                    <div className="flex items-center gap-2 p-2 bg-white rounded-xl border border-emerald-300">
+                      <img src={insightImageUrl} alt="첨부 사진" className="w-12 h-12 object-cover rounded-lg border" />
+                      <span className="text-xs text-emerald-950 font-medium flex-1">📷 사진 첨부됨 (노션 본문에도 영구 저장)</span>
+                      <button type="button" onClick={() => setInsightImageUrl('')} className="text-xs text-stone-500 hover:text-stone-800 px-2 py-1 bg-stone-100 rounded border">사진 취소</button>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setActiveForm('none')}
+                      className="px-3 py-1.5 text-xs text-stone-500 hover:text-stone-800"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submittingInsight || isOcrProcessing}
+                      className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow transition disabled:opacity-50"
+                    >
+                      {submittingInsight ? '저장 중...' : '문장 저장'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* C. 통합 타임라인 피드 (최신순 융합 정렬) */}
+              <div className="space-y-3 pt-1">
+                <div className="flex items-center justify-between text-xs text-stone-500 px-1">
+                  <span className="font-bold text-stone-700 uppercase tracking-wider">
+                    통합 독서 피드 (최신순)
+                  </span>
+                  <span>총 {logs.length + insights.length}개의 기록</span>
+                </div>
+
+                {logs.length === 0 && insights.length === 0 ? (
+                  <div className="text-center py-10 bg-stone-50/70 rounded-2xl border border-dashed border-stone-300 space-y-2">
+                    <span className="text-2xl">📖</span>
+                    <p className="text-sm font-semibold text-stone-600">아직 작성된 일지나 문장이 없습니다.</p>
+                    <p className="text-xs text-stone-400">
+                      상단의 [+ 독서일지 작성] 또는 [+ 문장수집 작성] 버튼을 눌러 첫 기록을 남겨보세요!
+                    </p>
+                  </div>
+                ) : (
+                  [
+                    ...logs.map((l) => ({
+                      id: l.id,
+                      itemType: 'log' as const,
+                      date: l.date,
+                      page: l.page,
+                      content: l.content,
+                    })),
+                    ...insights.map((ins) => ({
+                      id: ins.id,
+                      itemType: 'insight' as const,
+                      date: ins.date,
+                      page: ins.page,
+                      content: ins.quote,
+                    })),
+                  ]
+                    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+                    .map((item) =>
+                      item.itemType === 'log' ? (
+                        /* 독서일지 카드 */
+                        <div
+                          key={`log-${item.id}`}
+                          className="p-4 bg-white rounded-2xl border border-amber-200/80 shadow-sm hover:shadow transition"
+                        >
+                          <div className="flex items-center justify-between text-xs mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center gap-1">
+                                <span>📖</span> 독서일지
+                              </span>
+                              <span className="font-semibold text-stone-600 font-mono">
+                                {item.page}p 읽음
+                              </span>
+                              <span className="text-stone-400">·</span>
+                              <span className="text-stone-500">{item.date}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteLog(item.id)}
+                              className="text-stone-400 hover:text-rose-600 transition p-1 text-xs font-medium"
+                              title="독서일지 삭제"
+                            >
+                              삭제 🗑️
+                            </button>
+                          </div>
+                          <p className="text-sm text-stone-800 whitespace-pre-line leading-relaxed pl-1">
+                            {item.content}
+                          </p>
+                        </div>
+                      ) : (
+                        /* 문장수집 카드 */
+                        <div
+                          key={`insight-${item.id}`}
+                          className="p-4 bg-emerald-50/40 rounded-2xl border border-emerald-200/80 shadow-sm hover:shadow transition"
+                        >
+                          <div className="flex items-center justify-between text-xs mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold flex items-center gap-1">
+                                <span>💡</span> 문장수집
+                              </span>
+                              <span className="font-semibold text-emerald-900 font-mono">
+                                {item.page ? `${item.page}` : '페이지 미정'}
+                              </span>
+                              <span className="text-stone-400">·</span>
+                              <span className="text-stone-500">{item.date}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteInsight(item.id)}
+                              className="text-stone-400 hover:text-rose-600 transition p-1 text-xs font-medium"
+                              title="문장수집 삭제"
+                            >
+                              삭제 🗑️
+                            </button>
+                          </div>
+                          <blockquote className="text-sm text-stone-800 italic border-l-4 border-emerald-500 pl-3 leading-relaxed whitespace-pre-line bg-white/60 p-2.5 rounded-r-xl">
+                            {item.content}
+                          </blockquote>
+                        </div>
+                      )
+                    )
                 )}
               </div>
             </div>
           )}
 
-          {/* 2. 문장수집 탭 */}
-          {activeTab === 'insights' && (
-            <div className="space-y-6">
-              <form onSubmit={handleSubmitInsight} className="bg-stone-50 p-4 rounded-2xl border border-stone-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-stone-700">새 문장 수집하기</span>
-                  <label className="text-xs font-semibold text-amber-700 hover:text-amber-800 cursor-pointer flex items-center gap-1">
-                    <span>📷 책 본문 촬영(OCR)</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) handlePhotoOcr(e.target.files[0], 'insight');
-                      }}
-                      disabled={isOcrProcessing}
-                    />
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-stone-500 mb-1">페이지 번호</label>
-                    <input
-                      type="text"
-                      placeholder="예: p.124"
-                      value={insightPage}
-                      onChange={(e) => setInsightPage(e.target.value)}
-                      className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-stone-500 mb-1">수집 날짜</label>
-                    <input
-                      type="date"
-                      value={insightDate}
-                      onChange={(e) => setInsightDate(e.target.value)}
-                      className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <textarea
-                    rows={4}
-                    placeholder="기억하고 싶은 인상 깊은 문장과 나의 단상을 입력하세요..."
-                    value={insightQuote}
-                    onChange={(e) => setInsightQuote(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
-                    required
-                  ></textarea>
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={submittingInsight || isOcrProcessing}
-                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl shadow transition disabled:opacity-50"
-                  >
-                    {submittingInsight ? '저장 중...' : '문장 저장'}
-                  </button>
-                </div>
-              </form>
-
-              {/* 문장 목록 */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-stone-600 uppercase tracking-wider">
-                  수집된 문장들
-                </h4>
-                {insights.length === 0 ? (
-                  <p className="text-sm text-stone-400 py-4 text-center">수집된 문장이 없습니다.</p>
-                ) : (
-                  insights.map((ins) => (
-                    <div key={ins.id} className="p-4 bg-amber-50/50 rounded-xl border border-amber-200/60 shadow-sm">
-                      <div className="flex items-center justify-between text-xs text-stone-500 mb-2">
-                        <span className="font-semibold text-amber-800">{ins.page ? `${ins.page}` : '페이지 미정'}</span>
-                        <span>{ins.date}</span>
-                      </div>
-                      <blockquote className="text-sm text-stone-800 italic border-l-2 border-amber-500 pl-3 leading-relaxed whitespace-pre-line">
-                        {ins.quote}
-                      </blockquote>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* 3. AI 독서감상문 탭 */}
+          {/* 2. AI 독서감상문 탭 */}
           {activeTab === 'ai' && (
             <div className="space-y-4">
               <div className="p-4 bg-orange-50 rounded-2xl border border-orange-200 flex items-center justify-between">
