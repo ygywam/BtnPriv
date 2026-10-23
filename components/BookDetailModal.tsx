@@ -27,12 +27,14 @@ export default function BookDetailModal({
   const [logDate, setLogDate] = useState(new Date().toISOString().slice(0, 10));
   const [logPage, setLogPage] = useState<number | ''>('');
   const [logContent, setLogContent] = useState('');
+  const [logImageUrl, setLogImageUrl] = useState('');
   const [submittingLog, setSubmittingLog] = useState(false);
 
   // 문장수집 입력값
   const [insightQuote, setInsightQuote] = useState('');
   const [insightPage, setInsightPage] = useState('');
   const [insightDate, setInsightDate] = useState(new Date().toISOString().slice(0, 10));
+  const [insightImageUrl, setInsightImageUrl] = useState('');
   const [submittingInsight, setSubmittingInsight] = useState(false);
 
   // OCR 상태
@@ -41,6 +43,38 @@ export default function BookDetailModal({
   // AI 독서감상문
   const [aiReport, setAiReport] = useState('');
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+
+  // 이미지 캔버스 압축 헬퍼
+  const compressImage = (file: File, maxWidth = 1200, quality = 0.8): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          } else {
+            resolve(e.target?.result as string);
+          }
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  };
 
   // 데이터 로드
   useEffect(() => {
@@ -82,12 +116,14 @@ export default function BookDetailModal({
           page: Number(logPage),
           content: logContent,
           challengeId: currentChallengeId,
+          imageUrl: logImageUrl,
         }),
       });
 
       if (!res.ok) throw new Error('일지 작성 실패');
       setLogContent('');
       setLogPage('');
+      setLogImageUrl('');
       await loadBookItems();
       onRefresh();
     } catch (err: any) {
@@ -116,12 +152,14 @@ export default function BookDetailModal({
           page: insightPage,
           date: insightDate,
           challengeId: currentChallengeId,
+          imageUrl: insightImageUrl,
         }),
       });
 
       if (!res.ok) throw new Error('문장수집 실패');
       setInsightQuote('');
       setInsightPage('');
+      setInsightImageUrl('');
       await loadBookItems();
       onRefresh();
     } catch (err: any) {
@@ -135,29 +173,39 @@ export default function BookDetailModal({
   const handlePhotoOcr = async (file: File, target: 'log' | 'insight') => {
     setIsOcrProcessing(true);
     try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64 = e.target?.result as string;
-        const res = await fetch('/api/ocr', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ base64Data: base64 }),
-        });
-        const data = await res.json();
-        if (data.ok && data.text) {
-          if (target === 'log') {
-            setLogContent((prev) => (prev ? `${prev}\n\n${data.text}` : data.text));
-          } else {
-            setInsightQuote((prev) => (prev ? `${prev}\n\n${data.text}` : data.text));
-          }
-        } else {
-          alert('글자를 인식하지 못했습니다: ' + (data.error || '알 수 없는 오류'));
-        }
+      const base64 = await compressImage(file);
+      if (!base64) {
+        alert('이미지를 읽을 수 없습니다.');
         setIsOcrProcessing(false);
-      };
-      reader.readAsDataURL(file);
+        return;
+      }
+
+      if (target === 'log') {
+        setLogImageUrl(base64);
+      } else {
+        setInsightImageUrl(base64);
+      }
+
+      const res = await fetch('/api/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64Data: base64, mimeType: 'image/jpeg' }),
+      });
+      const data = await res.json();
+      const recognizedText = data.text || data.ocrText;
+
+      if (data.ok && recognizedText) {
+        if (target === 'log') {
+          setLogContent((prev) => (prev ? `${prev}\n\n${recognizedText}` : recognizedText));
+        } else {
+          setInsightQuote((prev) => (prev ? `${prev}\n\n${recognizedText}` : recognizedText));
+        }
+      } else {
+        alert('글자를 인식하지 못했습니다: ' + (data.error || '알 수 없는 오류'));
+      }
     } catch (err: any) {
       alert('OCR 오류: ' + err.message);
+    } finally {
       setIsOcrProcessing(false);
     }
   };
@@ -172,12 +220,16 @@ export default function BookDetailModal({
         body: JSON.stringify({
           bookTitle: book.title,
           author: book.author,
+          notionPageId: book.id,
+          readingLogs: logs.map((l) => ({ readDate: l.date, readPages: l.page, note: l.content })),
+          pageLogs: insights.map((i) => ({ page: i.page, notes: i.quote })),
           notes: logs.map((l) => l.content).join('\n'),
         }),
       });
       const data = await res.json();
-      if (data.ok && data.report) {
-        setAiReport(data.report);
+      const generatedReport = data.report || data.aiReport;
+      if (data.ok && generatedReport) {
+        setAiReport(generatedReport);
       } else {
         alert('AI 감상문 생성 실패: ' + (data.error || '오류 발생'));
       }

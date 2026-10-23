@@ -155,7 +155,7 @@ ${insights.map((s) => `- 《${s.bookTitle}》 (${s.page ? s.page + 'p' : s.date}
         object: 'block',
         type: 'paragraph',
         paragraph: {
-          rich_text: [{ type: 'text', text: { content: `📊 성과: ${report.statsText || ''}`, annotations: { bold: true } } }],
+          rich_text: [{ type: 'text', text: { content: `📊 성과: ${report.statsText || ''}` }, annotations: { bold: true } }],
         },
       },
       {
@@ -181,7 +181,7 @@ ${insights.map((s) => `- 《${s.bookTitle}》 (${s.page ? s.page + 'p' : s.date}
           type: 'paragraph',
           paragraph: {
             rich_text: [
-              { type: 'text', text: { content: `— ${item.bookInfo || ''}\n`, annotations: { italic: true, color: 'gray' } } },
+              { type: 'text', text: { content: `— ${item.bookInfo || ''}\n` }, annotations: { italic: true, color: 'gray' } },
               { type: 'text', text: { content: item.commentary || '' } },
             ],
           },

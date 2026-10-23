@@ -3,7 +3,7 @@ import { notion, NOTION_LOG_DB_ID as LOG_DB_ID, NOTION_INSIGHT_DB_ID as INSIGHT_
 
 export async function POST(request: Request) {
   try {
-    const { bookTitle, author, readingLogs: clientReadingLogs, pageLogs: clientPageLogs, notionPageId } = await request.json();
+    const { bookTitle, author, readingLogs: clientReadingLogs, pageLogs: clientPageLogs, notionPageId, notes: clientNotes } = await request.json();
     const geminiKey = process.env.GEMINI_API_KEY;
 
     if (!geminiKey) {
@@ -45,9 +45,12 @@ export async function POST(request: Request) {
       }
     }
 
-    const readingSummary = readingLogs
+    let readingSummary = readingLogs
       .map((l: any) => `[진도/감정] 날짜:${l.readDate}, 누적:${l.readPages}쪽 - "${l.note}"`)
       .join('\n');
+    if (!readingSummary && clientNotes) {
+      readingSummary = clientNotes;
+    }
     const pageSummary = pageLogs
       .map((l: any) => `[발췌/인사이트] ${l.page}쪽 - "${l.notes}"`)
       .join('\n');
@@ -108,7 +111,11 @@ ${pageSummary || '없음'}
       }
     }
 
-    return NextResponse.json({ ok: true, aiReport: generatedText });
+    return NextResponse.json({
+      ok: true,
+      report: generatedText,
+      aiReport: generatedText,
+    });
   } catch (error: any) {
     console.error('AI 감상문 생성 오류:', error);
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });

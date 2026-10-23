@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { notion, NOTION_LOG_DB_ID } from '@/lib/notion';
+import { notion, NOTION_LOG_DB_ID, uploadImageToNotion } from '@/lib/notion';
 import { getOrCreateChallengeByDate } from '@/lib/challengeHelper';
 import { ReadingLog } from '@/lib/types';
 
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { bookId, date, page, content, challengeId } = body;
+    const { bookId, date, page, content, challengeId, imageUrl } = body;
 
     if (!bookId) {
       return NextResponse.json({ error: '관련 책 ID는 필수입니다.' }, { status: 400 });
@@ -128,10 +128,44 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    const createdPage = await notion.pages.create({
+    // 사진 첨부 시 노션 본문에 이미지 블록 생성 (Base64는 노션 공식 file_uploads 사용, HTTP URL은 external 사용)
+    const children: any[] = [];
+    if (imageUrl) {
+      try {
+        if (String(imageUrl).startsWith('data:')) {
+          const fileUploadId = await uploadImageToNotion(imageUrl);
+          children.push({
+            object: 'block',
+            type: 'image',
+            image: {
+              type: 'file_upload',
+              file_upload: { id: fileUploadId },
+            },
+          });
+        } else if (String(imageUrl).startsWith('http')) {
+          children.push({
+            object: 'block',
+            type: 'image',
+            image: {
+              type: 'external',
+              external: { url: imageUrl },
+            },
+          });
+        }
+      } catch (imgErr: any) {
+        console.warn('독서일지 사진 노션 업로드 실패 (텍스트 저장은 계속 진행):', imgErr.message);
+      }
+    }
+
+    const createPayload: any = {
       parent: { database_id: NOTION_LOG_DB_ID },
       properties,
-    });
+    };
+    if (children.length > 0) {
+      createPayload.children = children;
+    }
+
+    const createdPage = await notion.pages.create(createPayload);
 
     return NextResponse.json({ log: parseLogPage(createdPage) });
   } catch (error: any) {
