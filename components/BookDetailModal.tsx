@@ -45,6 +45,13 @@ export default function BookDetailModal({
   const [aiReport, setAiReport] = useState('');
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
 
+  // 도서 소속 챌린지 변경 상태
+  const [selectedBookChallengeId, setSelectedBookChallengeId] = useState<string>(
+    book.challengeIds?.[0] || currentChallengeId || challenges[0]?.id || ''
+  );
+  const [updatingChallenge, setUpdatingChallenge] = useState(false);
+  const latestChallenge = challenges[0] || null;
+
   // 이미지 캔버스 압축 헬퍼
   const compressImage = (file: File, maxWidth = 1200, quality = 0.8): Promise<string> => {
     return new Promise((resolve) => {
@@ -288,6 +295,42 @@ export default function BookDetailModal({
     }
   };
 
+  // 도서 소속 챌린지 변경 핸들러
+  const handleChallengeChange = async (targetId: string) => {
+    if (!targetId || targetId === selectedBookChallengeId) return;
+    const targetChallenge = challenges.find((c) => c.id === targetId);
+    const targetTitle = targetChallenge?.title || '선택한 챌린지';
+
+    if (!confirm(`이 도서의 챌린지를 [${targetTitle}]으로 변경하시겠습니까?`)) {
+      return;
+    }
+
+    setUpdatingChallenge(true);
+    try {
+      const res = await fetch('/api/books', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'changeChallenge',
+          bookId: book.id,
+          targetChallengeId: targetId,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '챌린지 변경 실패');
+
+      setSelectedBookChallengeId(targetId);
+      book.challengeIds = [targetId];
+      alert(`도서의 소속 챌린지가 [${targetTitle}]으로 변경되었습니다.`);
+      onRefresh();
+    } catch (err: any) {
+      alert('챌린지 변경 오류: ' + err.message);
+    } finally {
+      setUpdatingChallenge(false);
+    }
+  };
+
   return (
     <div className="modal">
       <div className="modal-backdrop" onClick={onClose}></div>
@@ -317,6 +360,36 @@ export default function BookDetailModal({
               <p className="text-xs text-stone-600">
                 {book.author} · {book.publisher}
               </p>
+
+              {/* 소속 챌린지 및 변경 컨트롤 */}
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                <span className="text-[11px] text-stone-500 font-bold">🎯 챌린지:</span>
+                <select
+                  value={selectedBookChallengeId}
+                  onChange={(e) => handleChallengeChange(e.target.value)}
+                  disabled={updatingChallenge}
+                  className="text-xs font-semibold py-1 px-2 rounded-lg border border-stone-300 bg-white text-stone-800 shadow-sm"
+                >
+                  {challenges.map((c, i) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title} {i === 0 ? '(최신)' : ''}
+                    </option>
+                  ))}
+                </select>
+                {latestChallenge && selectedBookChallengeId !== latestChallenge.id && (
+                  <button
+                    type="button"
+                    disabled={updatingChallenge}
+                    onClick={() => handleChallengeChange(latestChallenge.id)}
+                    className="px-2 py-1 text-[11px] font-bold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition"
+                  >
+                    ⏩ 최신 챌린지로 이동
+                  </button>
+                )}
+                {updatingChallenge && (
+                  <span className="text-xs text-amber-700 animate-pulse font-medium">변경 중...</span>
+                )}
+              </div>
             </div>
           </div>
           <button className="ghost-button" onClick={onClose}>

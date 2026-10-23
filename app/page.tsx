@@ -53,6 +53,9 @@ export default function Home() {
   const [feedInsights, setFeedInsights] = useState<Insight[]>([]);
   const [feedLoading, setFeedLoading] = useState(false);
 
+  // 8. 챌린지 미완독 도서 일괄 이월 상태
+  const [rollingOver, setRollingOver] = useState(false);
+
   // 초기화 로드
   useEffect(() => {
     const savedTheme = localStorage.getItem('app_theme') || 'theme-base';
@@ -129,6 +132,59 @@ export default function Home() {
   const currentChallenge = useMemo(() => {
     return challenges.find((c) => c.id === selectedChallengeId) || challenges[0] || null;
   }, [challenges, selectedChallengeId]);
+
+  // 최신(가장 최근) 챌린지 객체
+  const latestChallenge = useMemo(() => challenges[0] || null, [challenges]);
+
+  // 현재 선택된 챌린지 내 완독하지 못한 도서 목록 (완독률 < 100%)
+  const incompleteBooksInCurrentChallenge = useMemo(() => {
+    if (!currentChallenge) return [];
+    return books.filter(
+      (b) => b.challengeIds.includes(currentChallenge.id) && (b.progressRate || 0) < 100
+    );
+  }, [books, currentChallenge]);
+
+  // 과거 챌린지 미완독 도서 최신 챌린지로 일괄 이월 핸들러
+  const handleBatchRollover = async () => {
+    if (!currentChallenge || !latestChallenge) return;
+    if (incompleteBooksInCurrentChallenge.length === 0) {
+      alert('이 챌린지에는 이월할 미완독 도서가 없습니다.');
+      return;
+    }
+
+    const bookTitles = incompleteBooksInCurrentChallenge.map((b) => `《${b.title}》`).join(', ');
+    if (
+      !confirm(
+        `완독하지 못한 ${incompleteBooksInCurrentChallenge.length}권의 도서(${bookTitles})를 최신 챌린지 [${latestChallenge.title}]로 이동하시겠습니까?`
+      )
+    ) {
+      return;
+    }
+
+    setRollingOver(true);
+    try {
+      const res = await fetch('/api/books', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'batchRollover',
+          fromChallengeId: currentChallenge.id,
+          toChallengeId: latestChallenge.id,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '이월 처리 실패');
+
+      alert(`✨ ${data.count}권의 미완독 도서가 [${latestChallenge.title}]로 성공적으로 이월되었습니다!`);
+      setSelectedChallengeId(latestChallenge.id);
+      await loadInitialData();
+    } catch (err: any) {
+      alert('도서 이월 중 오류: ' + err.message);
+    } finally {
+      setRollingOver(false);
+    }
+  };
 
   // 도서 검색 핸들러
   const handleSearch = async () => {
@@ -363,6 +419,51 @@ export default function Home() {
               </div>
               <div className="challenge-grass-text">
                 {currentChallenge.progressText}
+              </div>
+            </div>
+          )}
+
+          {/* 과거 챌린지 미완독 도서 최신 챌린지 일괄 이월 배너 */}
+          {latestChallenge && currentChallenge.id !== latestChallenge.id && incompleteBooksInCurrentChallenge.length > 0 && (
+            <div
+              style={{
+                marginTop: '12px',
+                padding: '12px 14px',
+                borderRadius: '12px',
+                background: '#fff8ef',
+                border: '1px solid #fed7aa',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#9a3412', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>💡</span> 이 챌린지에 완독하지 못한 책이 {incompleteBooksInCurrentChallenge.length}권 있습니다.
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#78716c', marginTop: '2px' }}>
+                    {incompleteBooksInCurrentChallenge.map((b) => `『${b.title}』(${b.progressRate || 0}%)`).join(', ')}
+                  </div>
+                </div>
+                <button
+                  onClick={handleBatchRollover}
+                  disabled={rollingOver}
+                  style={{
+                    padding: '7px 14px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    background: '#ea580c',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {rollingOver ? '이월 처리 중...' : `⏩ 최신 챌린지로 일괄 이월`}
+                </button>
               </div>
             </div>
           )}

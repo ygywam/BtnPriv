@@ -214,3 +214,91 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: error.message || '도서 삭제 실패' }, { status: 500 });
   }
 }
+
+// PATCH /api/books - 도서 챌린지 변경 (단일 변경 또는 미완독 도서 일괄 이월)
+export async function PATCH(req: NextRequest) {
+  try {
+    if (!NOTION_BOOK_DB_ID) {
+      return NextResponse.json({ error: 'NOTION_BOOK_DB_ID 미설정' }, { status: 500 });
+    }
+
+    const body = await req.json();
+    const { action, bookId, targetChallengeId, fromChallengeId, toChallengeId } = body;
+
+    // 1. 개별 도서 챌린지 변경
+    if (action === 'changeChallenge' || (!action && bookId && targetChallengeId)) {
+      if (!bookId || !targetChallengeId) {
+        return NextResponse.json({ error: 'bookId와 targetChallengeId가 필요합니다.' }, { status: 400 });
+      }
+
+      await notion.pages.update({
+        page_id: bookId,
+        properties: {
+          '*관련 챌린지': {
+            relation: [{ id: targetChallengeId }],
+          },
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: '도서의 챌린지가 성공적으로 변경되었습니다.',
+      });
+    }
+
+    // 2. 미완독 도서 다음 챌린지로 일괄 이월
+    if (action === 'batchRollover') {
+      if (!fromChallengeId || !toChallengeId) {
+        return NextResponse.json(
+          { error: 'fromChallengeId와 toChallengeId가 필요합니다.' },
+          { status: 400 }
+        );
+      }
+
+      // 기존 챌린지에 연결된 도서 목록 조회
+      const queryRes = await notion.databases.query({
+        database_id: NOTION_BOOK_DB_ID,
+        filter: {
+          property: '*관련 챌린지',
+          relation: {
+            contains: fromChallengeId,
+          },
+        },
+      });
+
+      const books = queryRes.results.map((p: any) => parseBookPage(p));
+      // 완독률 < 100% 인 도서만 필터링
+      const incompleteBooks = books.filter((b) => (b.progressRate || 0) < 100);
+
+      const updatedTitles: string[] = [];
+      for (const b of incompleteBooks) {
+        try {
+          await notion.pages.update({
+            page_id: b.id,
+            properties: {
+              '*관련 챌린지': {
+                relation: [{ id: toChallengeId }],
+              },
+            },
+          });
+          updatedTitles.push(b.title);
+        } catch (updateErr) {
+          console.error(`도서(${b.title}) 챌린지 이월 실패:`, updateErr);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        count: updatedTitles.length,
+        titles: updatedTitles,
+        message: `${updatedTitles.length}권의 미완독 도서가 성공적으로 이월되었습니다.`,
+      });
+    }
+
+    return NextResponse.json({ error: '알 수 없는 action입니다.' }, { status: 400 });
+  } catch (error: any) {
+    console.error('도서 챌린지 변경 오류:', error);
+    return NextResponse.json({ error: error.message || '챌린지 변경 실패' }, { status: 500 });
+  }
+}
+
