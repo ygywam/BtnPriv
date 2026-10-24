@@ -316,10 +316,9 @@ export default function Home() {
 
   return (
     <div className="app">
-      {/* 1. 상단 헤더 */}
+      {/* 1. 상단 마스트헤드 */}
       <header className="app-header">
         <div>
-          <p className="eyebrow">기록조율사의 독서기록 v4.3 👑</p>
           <div
             className="app-title-row"
             onClick={() => {
