@@ -30,11 +30,15 @@
    - 노션 키, Gemini 키, 도서 검색 API 키 등 모든 인증 정보는 Next.js 백엔드 서버(Route Handlers)에서만 호출됩니다.
    - 브라우저 개발자 도구의 Network 및 Sources 탭에 API 키가 절대 노출되지 않습니다.
 
+7. **북튜닝 소개 & 사용 가이드 동영상 탑재**
+   - 상단 `[📖 사용법]` 모달을 열면 북튜닝 소개 및 사용 가이드 영상을 웹앱 내에서 고화질로 바로 시청할 수 있습니다.
+
 ---
 
-## 🔗 연결 노션 페이지
+## 🔗 내 노션 페이지 연결
 
-- **[📚 북튜닝(Book Tuning) 개인 독서 기록장 페이지](https://app.notion.com/p/record-tuner/Book-Tuning-36c9a42118958035be6cf82a7f33d8fb?source=copy_link)**
+본 웹앱은 개인 노션 템플릿의 주소를 코드에 하드코딩하지 않고, 환경변수(`NEXT_PUBLIC_NOTION_PAGE_URL`)를 통해 개인별 노션 페이지를 연결합니다.  
+설정하지 않을 경우 개인 링크가 절대 노출되지 않으며, 환경변수에 본인의 노션 주소를 등록한 경우에만 푸터 및 설정 모달에서 '노션 데이터베이스 열기 ↗' 바로가기 버튼이 활성화됩니다.
 
 ---
 
@@ -55,6 +59,7 @@ Vercel 대시보드 (`Settings > Environment Variables`)에 아래 환경변수�
 | `NAVER_CLIENT_ID` | 네이버 검색 클라이언트 ID | 선택 |
 | `NAVER_CLIENT_SECRET` | 네이버 검색 클라이언트 시크릿 | 선택 |
 | `NL_API_KEY` | 국립중앙도서관 ISBN 연동 키 | 선택 |
+| `NEXT_PUBLIC_NOTION_PAGE_URL` | 푸터 및 설정의 '노션 데이터베이스 열기' 바로가기 URL | 선택 (미설정 시 바로가기 미작동 및 비공개 유지) |
 
 ---
 

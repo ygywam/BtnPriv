@@ -691,14 +691,28 @@ export default function Home() {
       <footer className="app-footer">
         <p>만든이. <strong>기록조율사 서울외고 조용희</strong> <a href="https://www.instagram.com/record_tuner/" target="_blank" rel="noreferrer">@record_tuner</a></p>
         <p style={{ marginTop: '10px' }}>
-          <a
-            href="https://app.notion.com/p/record-tuner/29d9a421189580de9e13ea639a713518"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ fontSize: '13px', marginRight: '14px', fontWeight: 'bold', color: 'var(--accent)' }}
-          >
-            📚 노션 데이터베이스 열기 ↗
-          </a>
+          {process.env.NEXT_PUBLIC_NOTION_PAGE_URL ? (
+            <a
+              href={process.env.NEXT_PUBLIC_NOTION_PAGE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: '13px', marginRight: '14px', fontWeight: 'bold', color: 'var(--accent)' }}
+            >
+              📚 노션 데이터베이스 열기 ↗
+            </a>
+          ) : (
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                alert('노션 바로가기 URL이 환경변수(NEXT_PUBLIC_NOTION_PAGE_URL)에 설정되지 않았습니다.\n.env.local 또는 Vercel 환경변수에 노션 페이지 주소를 등록해 주세요.');
+              }}
+              style={{ fontSize: '13px', marginRight: '14px', fontWeight: 'bold', color: 'var(--muted)' }}
+              title="환경변수 미설정"
+            >
+              📚 노션 데이터베이스 열기 ↗
+            </a>
+          )}
           <a href="#" onClick={(e) => { e.preventDefault(); setShowPrivacyModal(true); }} style={{ fontSize: '13px', marginRight: '14px' }}>개인정보처리방침</a>
           <a href="#" onClick={(e) => { e.preventDefault(); setShowCopyrightModal(true); }} style={{ fontSize: '13px', marginRight: '14px' }}>저작권 및 이용 안내</a>
           <a href="#" onClick={(e) => { e.preventDefault(); alert('문의 사항은 @record_tuner 인스타그램 DM 또는 노션 페이지를 통해 접수해 주세요.'); }} style={{ fontSize: '13px' }}>지원/문의</a>
@@ -892,9 +906,38 @@ export default function Home() {
                 <span className="text-xs bg-amber-800 text-white font-bold px-2 py-0.5 rounded-full inline-block mb-1">Book Tuning v4.3</span>
                 <h2>📖 북튜닝 사용 안내 가이드</h2>
               </div>
-              <button className="ghost-button" onClick={() => setShowTutorialModal(false)}>닫기</button>
+              <button
+                type="button"
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 transition"
+                onClick={() => setShowTutorialModal(false)}
+              >
+                닫기
+              </button>
             </div>
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 text-xs leading-relaxed text-stone-700">
+            <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-2 text-xs leading-relaxed text-stone-700">
+              {/* 홍보 및 사용 안내 영상 */}
+              <div className="p-3 bg-stone-900 rounded-2xl shadow-md overflow-hidden text-white">
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <h4 className="font-bold text-sm flex items-center gap-1.5 text-amber-200">
+                    <span>🎬</span> 북튜닝 홍보 & 사용 가이드 영상
+                  </h4>
+                  <span className="text-[11px] text-stone-400">재생을 누르면 시청할 수 있습니다</span>
+                </div>
+                <div className="rounded-xl overflow-hidden bg-black aspect-video flex items-center justify-center">
+                  <video
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="w-full h-full object-contain"
+                    poster="/icon.svg"
+                  >
+                    <source src="/booktuning_intro.mp4" type="video/mp4" />
+                    <source src="/북튜닝_홍보영상_booktuning.mp4" type="video/mp4" />
+                    브라우저가 동영상 재생을 지원하지 않습니다.
+                  </video>
+                </div>
+              </div>
+
               <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
                 <h4 className="font-bold text-amber-900 text-sm mb-1">🎯 1주 1권 챌린지 및 도서 연동</h4>
                 <p>도서를 검색하거나 직접 등록하면 <strong>현재 선택된 월별 챌린지</strong>에 자동으로 연결됩니다. 일지를 기록하거나 문장을 수집할 때도 당월 챌린지에 차곡차곡 쌓여 월간 리포트 생성에 반영됩니다.</p>
