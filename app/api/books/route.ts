@@ -21,6 +21,9 @@ function parseBookPage(page: any): Book {
     const f = coverFiles[0];
     cover = f.file?.url || f.external?.url || '';
   }
+  if (!cover && page.cover) {
+    cover = page.cover.file?.url || page.cover.external?.url || '';
+  }
 
   const rating = props['별점수']?.select?.name || '';
   const description = props['책소개']?.rich_text?.map((t: any) => t.plain_text).join('') || '';
@@ -155,7 +158,7 @@ export async function POST(req: NextRequest) {
       properties['표지'] = {
         files: [
           {
-            name: 'cover',
+            name: 'cover.jpg',
             type: 'external',
             external: { url: cover },
           },
@@ -181,10 +184,19 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    const createdPage = await notion.pages.create({
+    const pagePayload: any = {
       parent: { database_id: NOTION_BOOK_DB_ID },
       properties,
-    });
+    };
+
+    if (cover && String(cover).startsWith('http')) {
+      pagePayload.cover = {
+        type: 'external',
+        external: { url: cover },
+      };
+    }
+
+    const createdPage = await notion.pages.create(pagePayload);
 
     return NextResponse.json({ book: parseBookPage(createdPage) });
   } catch (error: any) {
@@ -223,7 +235,29 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { action, bookId, targetChallengeId, fromChallengeId, toChallengeId } = body;
+    const { action, bookId, targetChallengeId, fromChallengeId, toChallengeId, cover } = body;
+
+    // 0. 도서 표지 업데이트 (노션 속성 및 페이지 커버 동시 반영)
+    if (action === 'updateCover' || (bookId && cover)) {
+      const updatePayload: any = {
+        page_id: bookId,
+        properties: {},
+      };
+      if (cover && String(cover).startsWith('http')) {
+        updatePayload.properties['표지'] = {
+          files: [{ name: 'cover.jpg', type: 'external', external: { url: cover } }],
+        };
+        updatePayload.cover = {
+          type: 'external',
+          external: { url: cover },
+        };
+      }
+      await notion.pages.update(updatePayload);
+      return NextResponse.json({
+        success: true,
+        message: '도서 표지와 페이지 커버가 성공적으로 수정되었습니다.',
+      });
+    }
 
     // 1. 개별 도서 챌린지 변경
     if (action === 'changeChallenge' || (!action && bookId && targetChallengeId)) {
