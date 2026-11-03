@@ -392,7 +392,11 @@ export default function BookDetailModal({
               </div>
             </div>
           </div>
-          <button className="ghost-button" onClick={onClose}>
+          <button
+            type="button"
+            className="px-4 py-2 text-xs font-bold rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 transition"
+            onClick={onClose}
+          >
             닫기
           </button>
         </div>
@@ -476,25 +480,25 @@ export default function BookDetailModal({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-stone-600 mb-1">읽은 날짜</label>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">읽은 날짜</label>
                       <input
                         type="date"
                         value={logDate}
                         onChange={(e) => setLogDate(e.target.value)}
-                        className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                        className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white min-w-0 box-border text-stone-900"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-stone-600 mb-1">읽은 페이지 (누적 쪽수)</label>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">읽은 페이지 (누적 쪽수)</label>
                       <input
                         type="number"
                         placeholder={`최대 ${book.totalPage || ''}p`}
                         value={logPage}
                         onChange={(e) => setLogPage(e.target.value ? Number(e.target.value) : '')}
-                        className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                        className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white min-w-0 box-border text-stone-900 font-semibold"
                         required
                       />
                     </div>
@@ -506,7 +510,7 @@ export default function BookDetailModal({
                       placeholder="오늘 읽은 내용과 나의 생각을 자유롭게 남겨보세요..."
                       value={logContent}
                       onChange={(e) => setLogContent(e.target.value)}
-                      className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                      className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white box-border text-stone-900"
                       required
                     ></textarea>
                   </div>
@@ -515,15 +519,15 @@ export default function BookDetailModal({
                     <div className="flex items-center gap-2 p-2 bg-white rounded-xl border border-amber-300">
                       <img src={logImageUrl} alt="첨부 사진" className="w-12 h-12 object-cover rounded-lg border" />
                       <span className="text-xs text-amber-900 font-medium flex-1">📷 사진 첨부됨 (노션 본문에도 영구 저장)</span>
-                      <button type="button" onClick={() => setLogImageUrl('')} className="text-xs text-stone-500 hover:text-stone-800 px-2 py-1 bg-stone-100 rounded border">사진 취소</button>
+                      <button type="button" onClick={() => setLogImageUrl('')} className="text-xs text-stone-700 hover:text-stone-900 px-2 py-1 bg-stone-100 rounded border">사진 취소</button>
                     </div>
                   )}
 
-                  <div className="flex justify-end gap-2 pt-1">
+                  <div className="flex justify-end gap-2.5 pt-1">
                     <button
                       type="button"
                       onClick={() => setActiveForm('none')}
-                      className="px-3 py-1.5 text-xs text-stone-500 hover:text-stone-800"
+                      className="px-3.5 py-2 text-xs font-bold rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 transition"
                     >
                       취소
                     </button>
@@ -568,24 +572,24 @@ export default function BookDetailModal({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-stone-600 mb-1">페이지 번호</label>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">페이지 번호</label>
                       <input
                         type="text"
                         placeholder="예: p.124"
                         value={insightPage}
                         onChange={(e) => setInsightPage(e.target.value)}
-                        className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                        className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white min-w-0 box-border text-stone-900"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-stone-600 mb-1">수집 날짜</label>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">수집 날짜</label>
                       <input
                         type="date"
                         value={insightDate}
                         onChange={(e) => setInsightDate(e.target.value)}
-                        className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                        className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white min-w-0 box-border text-stone-900"
                       />
                     </div>
                   </div>
@@ -596,7 +600,7 @@ export default function BookDetailModal({
                       placeholder="기억하고 싶은 인상 깊은 문장과 나의 단상을 입력하세요..."
                       value={insightQuote}
                       onChange={(e) => setInsightQuote(e.target.value)}
-                      className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                      className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white box-border text-stone-900"
                       required
                     ></textarea>
                   </div>
@@ -605,15 +609,15 @@ export default function BookDetailModal({
                     <div className="flex items-center gap-2 p-2 bg-white rounded-xl border border-emerald-300">
                       <img src={insightImageUrl} alt="첨부 사진" className="w-12 h-12 object-cover rounded-lg border" />
                       <span className="text-xs text-emerald-950 font-medium flex-1">📷 사진 첨부됨 (노션 본문에도 영구 저장)</span>
-                      <button type="button" onClick={() => setInsightImageUrl('')} className="text-xs text-stone-500 hover:text-stone-800 px-2 py-1 bg-stone-100 rounded border">사진 취소</button>
+                      <button type="button" onClick={() => setInsightImageUrl('')} className="text-xs text-stone-700 hover:text-stone-900 px-2 py-1 bg-stone-100 rounded border">사진 취소</button>
                     </div>
                   )}
 
-                  <div className="flex justify-end gap-2 pt-1">
+                  <div className="flex justify-end gap-2.5 pt-1">
                     <button
                       type="button"
                       onClick={() => setActiveForm('none')}
-                      className="px-3 py-1.5 text-xs text-stone-500 hover:text-stone-800"
+                      className="px-3.5 py-2 text-xs font-bold rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 transition"
                     >
                       취소
                     </button>
@@ -768,14 +772,17 @@ export default function BookDetailModal({
         {/* 하단 푸터 (도서 삭제 등) */}
         <div className="p-4 bg-stone-50 border-t border-stone-200 flex items-center justify-between">
           <button
+            type="button"
             onClick={handleDeleteBook}
-            className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium"
+            className="px-3.5 py-2 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition flex items-center gap-1.5"
           >
-            🗑️ 도서 삭제
+            <span>🗑️</span>
+            <span>도서 삭제</span>
           </button>
           <button
+            type="button"
             onClick={onClose}
-            className="px-5 py-2 text-sm font-semibold rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 transition"
+            className="px-5 py-2 text-xs sm:text-sm font-bold rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 transition"
           >
             닫기
           </button>

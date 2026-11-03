@@ -92,8 +92,8 @@ export default function ChallengeReportModal({
         <div className="section-title-row" style={{ paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-orange-600 text-white">
-                Gemini 2.5 AI
+              <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-amber-700 text-white">
+                월간 리포트
               </span>
               <span className="text-xs text-stone-500 font-medium">
                 {challenge.title}
@@ -101,25 +101,31 @@ export default function ChallengeReportModal({
             </div>
             <h2>✨ 월간 독서 리포트 & 블로그 글</h2>
           </div>
-          <button className="ghost-button" onClick={onClose}>
+          <button
+            type="button"
+            className="px-4 py-2 text-xs font-bold rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 transition"
+            onClick={onClose}
+          >
             닫기
           </button>
         </div>
 
         {/* 안내 및 생성 트리거 */}
-        <div className="p-5 border-b border-stone-200 bg-amber-50/40">
+        <div className="p-4 sm:p-5 border-b border-stone-200 bg-amber-50/50">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="text-xs text-stone-700 leading-relaxed">
-              기존 8월 챌린지와 동일한 양식으로 <strong>[독서 리포트]</strong>, <strong>[추천도서]</strong>, <strong>[블로그 완성글]</strong>을 원클릭 생성하고,
-              <br />
-              노션 챌린지 페이지 본문 안에 접이식 토글 블록으로 즉시 영구 저장합니다.
+              이번 챌린지의 도서와 기록을 바탕으로 <strong>[독서 리포트]</strong>, <strong>[추천도서]</strong>, <strong>[블로그 완성글]</strong>을 생성하고,
+              <br className="hidden sm:inline" />
+              노션 챌린지 페이지 본문에 접이식 토글 블록으로 저장합니다.
             </div>
             <button
+              type="button"
               onClick={handleGenerate}
               disabled={isGenerating}
-              className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-sm font-bold rounded-xl shadow-md transition disabled:opacity-50 whitespace-nowrap"
+              className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition disabled:opacity-50 text-center flex items-center justify-center gap-1.5"
             >
-              {isGenerating ? 'AI 생성 중 (약 15초)...' : '✨ 리포트 생성 및 노션 저장'}
+              <span>{isGenerating ? '⏳' : '✨'}</span>
+              <span>{isGenerating ? '리포트 생성 중 (약 15초)...' : '리포트 생성 및 노션 저장'}</span>
             </button>
           </div>
           {statusMessage && (
@@ -129,34 +135,38 @@ export default function ChallengeReportModal({
           )}
         </div>
 
-        {/* 탭 네비게이션 */}
+        {/* 탭 네비게이션 (고대비 및 모바일 넘침 방지) */}
         {reportResult && blogResult && (
-          <div className="flex border-b border-stone-200 px-6 bg-white">
+          <div className="flex gap-2 p-3 bg-stone-100/90 border-b border-stone-200">
             <button
+              type="button"
               onClick={() => setActiveTab('report')}
-              className={`py-3 px-4 font-semibold text-sm border-b-2 transition ${
+              className={`flex-1 min-w-0 py-2.5 px-3 font-bold text-xs sm:text-sm rounded-xl transition text-center flex items-center justify-center gap-1.5 shadow-sm ${
                 activeTab === 'report'
-                  ? 'border-amber-600 text-amber-700'
-                  : 'border-transparent text-stone-500 hover:text-stone-700'
+                  ? 'bg-amber-700 text-white shadow-md'
+                  : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-300'
               }`}
             >
-              📊 독서 리포트 & 추천도서
+              <span>📊</span>
+              <span className="truncate">독서 리포트 & 추천도서</span>
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('blog')}
-              className={`py-3 px-4 font-semibold text-sm border-b-2 transition ${
+              className={`flex-1 min-w-0 py-2.5 px-3 font-bold text-xs sm:text-sm rounded-xl transition text-center flex items-center justify-center gap-1.5 shadow-sm ${
                 activeTab === 'blog'
-                  ? 'border-amber-600 text-amber-700'
-                  : 'border-transparent text-stone-500 hover:text-stone-700'
+                  ? 'bg-amber-700 text-white shadow-md'
+                  : 'bg-white text-stone-700 hover:bg-stone-50 border border-stone-300'
               }`}
             >
-              ✍️ 블로그 완성 에세이
+              <span>✍️</span>
+              <span className="truncate">블로그 완성 글</span>
             </button>
           </div>
         )}
 
         {/* 본문 뷰어 */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1">
           {loadingExisting ? (
             <div className="text-center py-20 text-stone-400">
               <div className="text-3xl mb-3 animate-spin">⏳</div>
@@ -166,7 +176,7 @@ export default function ChallengeReportModal({
             <div className="text-center py-20 text-stone-400">
               <div className="text-4xl mb-3">📝</div>
               <p className="text-sm">
-                상단의 <strong>‘리포트 생성 및 노션 저장’</strong> 버튼을 누르면 AI가 집필을 시작합니다.
+                상단의 <strong>‘리포트 생성 및 노션 저장’</strong> 버튼을 누르면 이번 챌린지 기록을 분석하여 리포트를 작성합니다.
               </p>
             </div>
           ) : activeTab === 'report' ? (
@@ -293,8 +303,9 @@ export default function ChallengeReportModal({
         {/* 하단 닫기 */}
         <div className="p-4 bg-stone-50 border-t border-stone-200 flex justify-end">
           <button
+            type="button"
             onClick={onClose}
-            className="px-6 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 text-sm font-semibold rounded-xl transition"
+            className="px-6 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-800 text-xs sm:text-sm font-bold rounded-xl transition"
           >
             닫기
           </button>
