@@ -7,8 +7,6 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ onClose }: SettingsModalProps) {
-  const notionPageUrl = process.env.NEXT_PUBLIC_NOTION_PAGE_URL;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
       <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-stone-200">
@@ -26,21 +24,14 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             <p className="text-amber-800 mb-3">
               현재 웹앱과 실시간 양방향 동기화되는 노션 페이지입니다.
             </p>
-            {notionPageUrl ? (
-              <a
-                href={notionPageUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl transition shadow-sm text-xs"
-              >
-                <span>🔗</span> 노션 독서 기록장 페이지 열기 ↗
-              </a>
-            ) : (
-              <div className="p-2.5 bg-amber-100/60 rounded-xl text-stone-600 text-[11px] leading-relaxed border border-amber-200">
-                ⚠️ <strong>노션 페이지 URL이 등록되지 않았습니다.</strong><br />
-                환경변수 <code>NEXT_PUBLIC_NOTION_PAGE_URL</code>에 나의 노션 페이지 주소를 입력하시면 이곳에 바로가기 버튼이 활성화됩니다.
-              </div>
-            )}
+            <a
+              href="/api/notion-url"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl transition shadow-sm text-xs"
+            >
+              <span>🔗</span> 노션 독서 기록장 페이지 열기 ↗
+            </a>
           </div>
 
           {/* 보안 및 Vercel 환경변수 안내 */}
@@ -63,7 +54,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 KAKAO_REST_API_KEY=...<br />
                 NAVER_CLIENT_ID=...<br />
                 NAVER_CLIENT_SECRET=...<br />
-                NEXT_PUBLIC_NOTION_PAGE_URL=https://app.notion.com/p/...
+                NOTION_PAGE_URL=https://app.notion.com/p/...
               </code>
             </div>
             <p className="text-[11px] text-stone-500">

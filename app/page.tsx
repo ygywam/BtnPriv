@@ -691,28 +691,14 @@ export default function Home() {
       <footer className="app-footer">
         <p>만든이. <strong>기록조율사 서울외고 조용희</strong> <a href="https://www.instagram.com/record_tuner/" target="_blank" rel="noreferrer">@record_tuner</a></p>
         <p style={{ marginTop: '10px' }}>
-          {process.env.NEXT_PUBLIC_NOTION_PAGE_URL ? (
-            <a
-              href={process.env.NEXT_PUBLIC_NOTION_PAGE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontSize: '13px', marginRight: '14px', fontWeight: 'bold', color: 'var(--accent)' }}
-            >
-              📚 노션 데이터베이스 열기 ↗
-            </a>
-          ) : (
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                alert('노션 바로가기 URL이 환경변수(NEXT_PUBLIC_NOTION_PAGE_URL)에 설정되지 않았습니다.\n.env.local 또는 Vercel 환경변수에 노션 페이지 주소를 등록해 주세요.');
-              }}
-              style={{ fontSize: '13px', marginRight: '14px', fontWeight: 'bold', color: 'var(--muted)' }}
-              title="환경변수 미설정"
-            >
-              📚 노션 데이터베이스 열기 ↗
-            </a>
-          )}
+          <a
+            href="/api/notion-url"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: '13px', marginRight: '14px', fontWeight: 'bold', color: 'var(--accent)' }}
+          >
+            📚 노션 데이터베이스 열기 ↗
+          </a>
           <a href="#" onClick={(e) => { e.preventDefault(); setShowPrivacyModal(true); }} style={{ fontSize: '13px', marginRight: '14px' }}>개인정보처리방침</a>
           <a href="#" onClick={(e) => { e.preventDefault(); setShowCopyrightModal(true); }} style={{ fontSize: '13px', marginRight: '14px' }}>저작권 및 이용 안내</a>
           <a href="#" onClick={(e) => { e.preventDefault(); alert('문의 사항은 @record_tuner 인스타그램 DM 또는 노션 페이지를 통해 접수해 주세요.'); }} style={{ fontSize: '13px' }}>지원/문의</a>

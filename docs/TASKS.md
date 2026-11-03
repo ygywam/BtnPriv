@@ -50,9 +50,10 @@
 - [x] 전역 `app/globals.css` 인풋 및 모달 모바일 안전 규격 강화 및 프로덕션 빌드 100% 검증
 
 ## 7단계: 노션 DB 열기 환경변수화 및 사용법 모달 동영상 탑재
-- [x] 푸터 및 설정 모달의 '노션 데이터베이스 열기' 링크 환경변수(`NEXT_PUBLIC_NOTION_PAGE_URL`) 연동
+- [x] 푸터 및 설정 모달의 '노션 데이터베이스 열기' 링크 환경변수 연동 및 `/api/notion-url` 서버 리다이렉트 브릿지 구축
+- [x] Vercel 등록명 `NOTION_PAGE_URL` 그대로 100% 호환 지원 (접두사 `NEXT_PUBLIC_` 불필요)
 - [x] 소스코드 내 하드코딩된 개인 노션 URL(fallback 포함) 100% 완전 삭제 및 미설정 시 비활성화 처리
 - [x] `.env.example`, `.env.local` 및 `README.md` 환경변수 안내 표 최신화
 - [x] 로컬 영상 `북튜닝_홍보영상_booktuning.mp4`를 `public/booktuning_intro.mp4`로 탑재
 - [x] `app/page.tsx` 사용법 모달 내 고화질 인라인 비디오 플레이어 탑재
-- [x] 프로덕션 빌드 100% 무결성 검증 통과
+- [x] 프로덕션 빌드 100% 무결성 검증 통과 (11개 라우트 전원 통과)
