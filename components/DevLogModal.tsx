@@ -55,20 +55,21 @@ interface DevLogModalProps {
 }
 
 /**
- * 포스트잇 스타일 가로 휠 캐러셀 개발로그 모달
+ * macOS Dock 스타일 포스트잇 가로 휠 캐러셀 개발로그 모달
  */
 export default function DevLogModal({ onClose }: DevLogModalProps) {
-  const modalRef = useRef<HTMLDivElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef({ x: 0, scrollLeft: 0 });
 
-  // 모달 열림 중 배경 페이지 스크롤 잠금 + 모달 위 어디서든 마우스 세로 휠 → 가로 캐러셀 이동 (non-passive)
+  // 서재와 동일한 non-passive 네이티브 휠 리스너 + 배경 스크롤 잠금
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
-    const modalEl = modalRef.current;
+    const shell = shellRef.current;
     const onNativeWheel = (e: WheelEvent) => {
       const track = trackRef.current;
       if (!track) return;
@@ -79,14 +80,14 @@ export default function DevLogModal({ onClose }: DevLogModalProps) {
       }
     };
 
-    if (modalEl) {
-      modalEl.addEventListener('wheel', onNativeWheel, { passive: false });
+    if (shell) {
+      shell.addEventListener('wheel', onNativeWheel, { passive: false });
     }
 
     return () => {
       document.body.style.overflow = prevOverflow;
-      if (modalEl) {
-        modalEl.removeEventListener('wheel', onNativeWheel);
+      if (shell) {
+        shell.removeEventListener('wheel', onNativeWheel);
       }
     };
   }, []);
@@ -114,11 +115,28 @@ export default function DevLogModal({ onClose }: DevLogModalProps) {
 
   const stopDragging = () => setIsDragging(false);
 
+  // macOS Dock 물결 확대 스타일
+  const getDockCardStyle = (index: number, item: DevLogEntry): React.CSSProperties => {
+    const base: React.CSSProperties = {
+      background: item.cardBg,
+      borderColor: item.cardBorder,
+    };
+    if (hoveredIdx === null) return base;
+    const dist = Math.abs(hoveredIdx - index);
+    if (dist === 0) {
+      return { ...base, transform: 'translateY(-14px) scale(1.09) rotate(0deg)', zIndex: 30 };
+    }
+    if (dist === 1) {
+      return { ...base, transform: 'translateY(-5px) scale(1.03)', zIndex: 20 };
+    }
+    return { ...base, opacity: 0.85 };
+  };
+
   return (
-    <div ref={modalRef} className="modal">
+    <div ref={shellRef} className="modal">
       <div className="modal-backdrop" onClick={onClose} />
-      <div className="modal-card devlog-modal-card" style={{ maxWidth: '900px' }}>
-        <div className="section-title-row mb-1">
+      <div className="modal-card devlog-modal-card" style={{ maxWidth: '920px' }}>
+        <div className="section-title-row mb-0">
           <h2>📝 북튜닝 개발로그</h2>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <button
@@ -143,56 +161,60 @@ export default function DevLogModal({ onClose }: DevLogModalProps) {
           </div>
         </div>
 
-        {/* 가로 포스트잇 캐러셀 트랙 */}
+        {/* 가로 포스트잇 Dock 캐러셀 트랙 */}
         <div
           ref={trackRef}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={stopDragging}
-          onMouseLeave={stopDragging}
+          onMouseLeave={() => {
+            stopDragging();
+            setHoveredIdx(null);
+          }}
           className={`devlog-postit-track ${isDragging ? 'is-dragging' : ''}`}
         >
-          {DEV_LOG_VERSIONS.map((item) => (
-            <article
-              key={item.version}
-              className={`devlog-postit-card ${item.tiltClass}`}
-              style={{
-                background: item.cardBg,
-                borderColor: item.cardBorder,
-              }}
-            >
-              <div className="devlog-postit-tape" aria-hidden="true" />
+          {DEV_LOG_VERSIONS.map((item, idx) => {
+            const isFocused = hoveredIdx === idx;
+            return (
+              <article
+                key={item.version}
+                className={`devlog-postit-card ${item.tiltClass} ${isFocused ? 'is-focused' : ''}`}
+                style={getDockCardStyle(idx, item)}
+                onMouseEnter={() => setHoveredIdx(idx)}
+              >
+                <div className="devlog-postit-tape" aria-hidden="true" />
 
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-mono text-stone-500 font-bold">( {item.number} )</span>
-                  <span
-                    className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm"
-                    style={{ backgroundColor: item.badgeBg, color: '#ffffff' }}
-                  >
-                    {item.version}
-                  </span>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono text-stone-500 font-bold">( {item.number} )</span>
+                    <span
+                      className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm"
+                      style={{ backgroundColor: item.badgeBg, color: '#ffffff' }}
+                    >
+                      {item.version}
+                    </span>
+                  </div>
+                  {renderCardIcon(item.iconType)}
                 </div>
-                {renderCardIcon(item.iconType)}
-              </div>
 
-              <div className="mb-2.5">
-                <div className="text-[11px] font-bold text-stone-500 mb-0.5">{item.date}</div>
-                <h3 className="text-sm sm:text-[15px] font-extrabold text-stone-900 leading-snug">
-                  {item.title}
-                </h3>
-              </div>
+                <div className="mb-2.5">
+                  <div className="text-[11px] font-bold text-stone-500 mb-0.5">{item.date}</div>
+                  <h3 className="text-sm sm:text-[15px] font-extrabold text-stone-900 leading-snug">
+                    {item.title}
+                  </h3>
+                </div>
 
-              <ul className="space-y-1.5 text-[11.5px] sm:text-xs text-stone-700 leading-relaxed flex-1">
-                {item.items.map((line, i) => (
-                  <li key={i} className="flex items-start gap-1.5">
-                    <span className="text-amber-700 font-bold mt-0.5 flex-shrink-0">•</span>
-                    <span>{line}</span>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
+                <ul className="space-y-1.5 text-[11.5px] sm:text-xs text-stone-700 leading-relaxed flex-1">
+                  {item.items.map((line, i) => (
+                    <li key={i} className="flex items-start gap-1.5">
+                      <span className="text-amber-700 font-bold mt-0.5 flex-shrink-0">•</span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            );
+          })}
         </div>
       </div>
     </div>
