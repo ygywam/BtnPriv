@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import DevLogModal from '@/components/DevLogModal';
 
 interface AppInfoModalsProps {
   theme: string;
@@ -117,7 +118,7 @@ export default function AppInfoModals({
             <div className="section-title-row">
               <div>
                 <span className="text-xs bg-amber-800 text-white font-bold px-2 py-0.5 rounded-full inline-block mb-1">
-                  Book Tuning
+                  Book Tuning v4.4
                 </span>
                 <h2>📖 북튜닝 사용 안내 가이드</h2>
               </div>
@@ -169,39 +170,8 @@ export default function AppInfoModals({
         </div>
       )}
 
-      {/* 개발로그 모달 */}
-      {showDevLogModal && (
-        <div className="modal">
-          <div className="modal-backdrop" onClick={() => setShowDevLogModal(false)} />
-          <div className="modal-card" style={{ maxWidth: '640px' }}>
-            <div className="section-title-row">
-              <div>
-                <h2>📝 북튜닝 개발로그</h2>
-              </div>
-              <button type="button" className="ghost-button" onClick={() => setShowDevLogModal(false)}>
-                닫기
-              </button>
-            </div>
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2 text-xs leading-relaxed text-stone-700">
-              <div className="border-b pb-2">
-                <span className="font-bold text-amber-800 text-sm">v5.0 (모바일·PC 대시보드 리뉴얼) - 2026.11</span>
-                <p className="mt-1">
-                  • 5대 탭(홈 · 서재 · 챌린지 · 피드 · 도감) 모바일 하단 네비게이션 및 PC 2단 대시보드 구축<br />
-                  • 지금 읽는 책 섹션, 챌린지 기간 기반 월별 캘린더, 등록 권수 목표 원형 게이지 신설<br />
-                  • 완독 도서 표지 도감 및 시간순 통합 피드 강화
-                </p>
-              </div>
-              <div className="border-b pb-2">
-                <span className="font-bold text-stone-600">v4.3 (개인 챌린지 전용) - 2026.10</span>
-                <p className="mt-1">
-                  • 1주 1권 챌린지 DB 실시간 연동 및 기간 세부 조절 지원<br />
-                  • Gemini AI 월간 리포트 및 블로그 글 노션 토글 블록 자동 저장
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 개발로그 모달 (포스트잇 가로 휠 캐러셀) */}
+      {showDevLogModal && <DevLogModal onClose={() => setShowDevLogModal(false)} />}
 
       {/* 개인정보처리방침 모달 */}
       {showPrivacyModal && (

@@ -2486,3 +2486,241 @@ p {
     font-size: 11.5px;
   }
 }
+
+/* ==========================================================================
+   DevLog Post-it Horizontal Wheel Carousel
+   ========================================================================== */
+
+.devlog-modal-card {
+  width: 94vw;
+  max-width: 900px;
+}
+
+.devlog-arrow-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--panel-warm);
+  color: var(--text-secondary);
+  border: 1px solid var(--line);
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.devlog-arrow-btn:hover {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  border-color: var(--accent);
+}
+
+.devlog-postit-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 18px 8px 16px;
+  scroll-snap-type: x proximity;
+  cursor: grab;
+  -webkit-overflow-scrolling: touch;
+}
+
+.devlog-postit-track.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.devlog-postit-card {
+  position: relative;
+  flex: 0 0 268px;
+  height: 330px;
+  border-radius: 22px;
+  border-width: 1px;
+  padding: 22px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
+  box-shadow: 0 8px 20px rgba(45, 30, 15, 0.08), 0 2px 6px rgba(45, 30, 15, 0.05);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+}
+
+.devlog-postit-card:hover {
+  transform: translateY(-6px) rotate(0deg) !important;
+  box-shadow: 0 16px 32px rgba(45, 30, 15, 0.14);
+}
+
+.devlog-postit-tape {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1.5deg);
+  width: 68px;
+  height: 18px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(150, 120, 80, 0.18);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .devlog-postit-track {
+    gap: 12px;
+    padding: 14px 4px 12px;
+  }
+
+  .devlog-postit-card {
+    flex: 0 0 232px;
+    height: 300px;
+    padding: 18px 14px 12px;
+    border-radius: 18px;
+  }
+
+  .devlog-postit-card ul {
+    font-size: 11px;
+  }
+}
+
+/* ==========================================================================
+   Library Dock Wheel Carousel (macOS Dock Style Bookshelf)
+   ========================================================================== */
+
+.library-dock-shell {
+  padding: 16px 18px 14px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #ffffff 0%, #fcf8f2 100%);
+}
+
+.library-dock-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.library-dock-spotlight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.library-dock-pill {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--accent);
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.library-dock-author {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.library-dock-hint {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.library-dock-arrows {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.library-dock-track {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 48px 28px 20px;
+  cursor: grab;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.library-dock-track.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.library-dock-card {
+  flex: 0 0 172px;
+  transform-origin: bottom center;
+  scroll-snap-align: center;
+  cursor: pointer;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.24s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.library-dock-card:hover {
+  transform: none;
+}
+
+.library-dock-card.is-focused {
+  border-color: var(--accent);
+  box-shadow: 0 18px 36px rgba(110, 57, 21, 0.22), 0 6px 14px rgba(45, 30, 15, 0.14);
+}
+
+.library-dock-shelf {
+  height: 10px;
+  margin: -4px 4px 0;
+  border-radius: 99px;
+  background: linear-gradient(180deg, #e5d4bf 0%, #cfb699 60%, #bfa17f 100%);
+  box-shadow: 0 4px 10px rgba(90, 60, 30, 0.15);
+}
+
+@media (max-width: 767px) {
+  .library-dock-shell {
+    padding: 12px 10px 10px;
+  }
+
+  .library-dock-spotlight {
+    font-size: 11px;
+  }
+
+  .library-dock-hint {
+    font-size: 10.5px;
+  }
+
+  .library-dock-track {
+    gap: 10px;
+    padding: 22px 8px 14px;
+  }
+
+  .library-dock-card {
+    flex: 0 0 132px;
+  }
+
+  .library-dock-card .book-card-body {
+    padding: 8px;
+  }
+
+  .library-dock-card .book-title {
+    font-size: 11.5px;
+  }
+
+  .library-dock-card .book-meta {
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
+
+  .library-dock-card .progress-text {
+    font-size: 9.5px;
+  }
+}
