@@ -70,3 +70,38 @@ export async function uploadImageToNotion(base64Data: string, customFilename?: s
 
   return uploadObj.id;
 }
+
+/**
+ * 노션 데이터베이스 쿼리의 pagination(has_more)을 순회해 전체 결과를 안전하게 가져오는 헬퍼
+ * 무한 호출을 막기 위해 최대 페이지 상한(maxPages, 기본 10페이지 = 최대 1,000건)을 둔다.
+ */
+export async function queryAllNotionDatabase(
+  params: {
+    database_id: string;
+    filter?: any;
+    sorts?: any[];
+    page_size?: number;
+  },
+  maxPages = 10
+): Promise<any[]> {
+  const results: any[] = [];
+  let cursor: string | undefined = undefined;
+  let pageCount = 0;
+
+  do {
+    const queryRes: any = await notion.databases.query({
+      ...params,
+      page_size: params.page_size || 100,
+      ...(cursor ? { start_cursor: cursor } : {}),
+    });
+
+    if (Array.isArray(queryRes.results)) {
+      results.push(...queryRes.results);
+    }
+
+    cursor = queryRes.has_more && queryRes.next_cursor ? queryRes.next_cursor : undefined;
+    pageCount += 1;
+  } while (cursor && pageCount < maxPages);
+
+  return results;
+}

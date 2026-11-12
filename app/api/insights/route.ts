@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { notion, NOTION_INSIGHT_DB_ID, uploadImageToNotion } from '@/lib/notion';
+import { notion, NOTION_INSIGHT_DB_ID, uploadImageToNotion, queryAllNotionDatabase } from '@/lib/notion';
 import { getOrCreateChallengeByDate } from '@/lib/challengeHelper';
 import { Insight } from '@/lib/types';
 
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
       filterObj.filter = { and: filterConditions };
     }
 
-    const queryRes = await notion.databases.query({
+    const pages = await queryAllNotionDatabase({
       database_id: NOTION_INSIGHT_DB_ID,
       ...filterObj,
       sorts: [
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
       page_size: 100,
     });
 
-    const insights = queryRes.results.map((p: any) => parseInsightPage(p));
+    const insights = pages.map((p: any) => parseInsightPage(p));
     return NextResponse.json({ insights });
   } catch (error: any) {
     console.error('문장수집 조회 오류:', error);

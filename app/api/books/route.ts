@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { notion, NOTION_BOOK_DB_ID } from '@/lib/notion';
+import { notion, NOTION_BOOK_DB_ID, queryAllNotionDatabase } from '@/lib/notion';
 import { getOrCreateChallengeByDate } from '@/lib/challengeHelper';
 import { Book } from '@/lib/types';
 
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    const queryRes = await notion.databases.query({
+    const pages = await queryAllNotionDatabase({
       database_id: NOTION_BOOK_DB_ID,
       ...filterObj,
       sorts: [
@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
       page_size: 100,
     });
 
-    const books = queryRes.results.map((p: any) => parseBookPage(p));
+    const books = pages.map((p: any) => parseBookPage(p));
     return NextResponse.json({ books });
   } catch (error: any) {
     console.error('도서 목록 조회 오류:', error);

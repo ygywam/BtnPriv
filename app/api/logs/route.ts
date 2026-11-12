@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { notion, NOTION_LOG_DB_ID, uploadImageToNotion } from '@/lib/notion';
+import { notion, NOTION_LOG_DB_ID, uploadImageToNotion, queryAllNotionDatabase } from '@/lib/notion';
 import { getOrCreateChallengeByDate } from '@/lib/challengeHelper';
 import { ReadingLog } from '@/lib/types';
 
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       filterObj.filter = { and: filterConditions };
     }
 
-    const queryRes = await notion.databases.query({
+    const pages = await queryAllNotionDatabase({
       database_id: NOTION_LOG_DB_ID,
       ...filterObj,
       sorts: [
@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
       page_size: 100,
     });
 
-    const logs = queryRes.results.map((p: any) => parseLogPage(p));
+    const logs = pages.map((p: any) => parseLogPage(p));
     return NextResponse.json({ logs });
   } catch (error: any) {
     console.error('독서일지 조회 오류:', error);

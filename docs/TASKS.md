@@ -57,3 +57,16 @@
 - [x] 로컬 영상 `북튜닝_홍보영상_booktuning.mp4`를 `public/booktuning_intro.mp4`로 탑재
 - [x] `app/page.tsx` 사용법 모달 내 고화질 인라인 비디오 플레이어 탑재
 - [x] 프로덕션 빌드 100% 무결성 검증 통과 (11개 라우트 전원 통과)
+
+## 8단계: 도서 등록 시 노션 페이지 커버 동시 연동
+- [x] 도서 등록(`POST /api/books`) 시 노션 `표지` 속성과 함께 `cover` 메타데이터(노션 페이지 상단 커버) 동시 저장
+- [x] 도서 파싱(`parseBookPage`) 시 `properties['표지']` 외에 `page.cover`도 함께 읽도록 상호 보완 처리
+- [x] 도서 정보 수정(`PATCH /api/books`) 시 `cover` 업데이트 지원 및 Next.js 빌드 100% 검증
+
+## 9단계: 모바일 & PC UI/UX 전면 리뉴얼 (5대 탭·캘린더·피드·도감)
+- [x] 백엔드 노션 전체 목록 조회 페이지네이션 보완 (`lib/notion.ts`, `/api/books`, `/api/logs`, `/api/insights`)
+- [ ] 반응형 5대 탭 내비게이션 구현 (`components/BottomNav.tsx` - 모바일 하단 고정 바 & PC 상단 탭 바, 작은 글씨/가로폭 넘침 방지)
+- [x] 홈 탭 구현 (`components/tabs/HomeTab.tsx`, `components/ChallengeCalendarCard.tsx` - 검색바, 지금 읽는 책, 챌린지 기간 캘린더 & 목표 도넛 차트, 최근 독서기록)
+- [x] 서재 탭·챌린지 탭·피드 탭·도감 탭 컴포넌트 구현 (`LibraryTab.tsx`, `ChallengeTab.tsx`, `FeedTab.tsx`, `DexTab.tsx`)
+- [x] 메인 페이지(`app/page.tsx`) 셸 리팩토링 및 스타일(`app/globals.css`) 모바일/PC 반응형 마무리 (모바일 작은 글씨·overflow 방지)
+- [ ] 프로덕션 빌드(`npm run build`) 및 모바일(390px)/PC(1280px) 브라우저 화면·콘솔 검증
