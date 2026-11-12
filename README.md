@@ -5,6 +5,17 @@
 
 ---
 
+## 🚀 처음 시작하기 (빠른 세팅 요약)
+
+나만의 개인 서재를 운영하려면 아래 4단계만 따라하면 됩니다. 자세한 그림/주소 찾는 법은 **[📘 전체 세팅 가이드 (docs/SETUP_GUIDE.md)](./docs/SETUP_GUIDE.md)** 를 확인하세요.
+
+1. **노션 템플릿 복제**: **[개인 독서 챌린지 (배포용) | Notion](https://app.notion.com/p/record-tuner/2a59a421189580169fa9d158783cee29)** 링크를 열어 우측 상단 **`복제(Duplicate)`** 로 내 워크스페이스에 복사합니다.
+2. **노션 API 발급 & 연결**: [노션 API 통합](https://www.notion.so/profile/integrations)에서 프라이빗 시크릿 키(`NOTION_API_KEY`)를 만든 뒤, 복제한 노션 페이지 우측 상단 **`⋯` → `연결(Connections)`** 에 방금 만든 통합 앱을 반드시 연결합니다.
+3. **4대 DB ID & 페이지 주소 확인**: 복제한 페이지 안의 4개 DB(`1주 1권 챌린지`, `1주 1권 읽기 책기록`, `독서일지기록`, `문장수집 DB`)를 각각 전체 페이지로 열어 주소의 `?v=` 앞 32자리 ID를 복사하고, 최상위 노션 페이지 주소(`NOTION_PAGE_URL`)도 복사합니다.
+4. **API 키 & 배포**: [Google AI Studio](https://aistudio.google.com/apikey)에서 Gemini 키(`GEMINI_API_KEY`)를, [알라딘 TTB](https://www.aladin.co.kr/ttb/wblog_manage.aspx)(또는 카카오·네이버)에서 도서 검색 키를 발급받아 **Vercel Environment Variables** 또는 로컬 `.env.local`에 입력하면 바로 사용할 수 있습니다.
+
+---
+
 ## 🌟 핵심 특징 (v4.4)
 
 1. **로그인 없는 1인 전용 즉시 직행 서재**
@@ -28,49 +39,42 @@
 5. **도서 3대 검색 엔진 & 표지/페이지 커버 동시 연동**
    - 알라딘 TTB API(쪽수 자동 추출), 카카오 도서, 네이버 도서 검색을 지원하며, 도서 등록·수정 시 노션 `표지` 속성과 페이지 상단 `cover`를 동시에 저장합니다.
 
-6. **포스트잇 휠 캐러셀 개발로그 & 가이드 영상 탑재**
-   - 상단 `📝 개발로그`에서 `v1.0`부터 `v4.4`까지의 전체 버전을 마우스 휠로 넘겨볼 수 있으며, `📖 사용법` 모달에서 소개·가이드 영상을 바로 시청할 수 있습니다.
+6. **스포트라이트 포스트잇 사용법 투어 & Dock 개발로그**
+   - 상단 `📖 사용법` 클릭 시 화면 각 영역을 박스 강조하며 포스트잇 설명이 따라다니고 마지막에 가이드 영상이 재생됩니다.
+   - 상단 `📝 개발로그`에서 `v1.0`~`v4.4` 전체 버전을 포스트잇 Dock 캐러셀로 넘겨볼 수 있습니다.
 
 7. **철저한 API 키 보안 (브라우저 노출 0%)**
    - 노션, Gemini, 도서 검색 등 모든 API 키는 Next.js 서버 Route Handlers에서만 사용되며 클라이언트 번들에 노출되지 않습니다.
 
 ---
 
-## 🔗 내 노션 페이지 연결
-
-본 웹앱은 개인 노션 주소를 코드에 하드코딩하지 않고 환경변수(`NOTION_PAGE_URL`)로 연결합니다.  
-환경변수가 설정된 경우에만 푸터의 `📚 노션 데이터베이스 열기 ↗`가 해당 주소로 연결되며, 미설정 시 개인 주소가 외부에 노출되지 않습니다.
-
----
-
-## 🛠️ Vercel 환경변수 설정 가이드
-
-Vercel 대시보드(`Settings > Environment Variables`)에 아래 환경변수들을 등록합니다.
+## 🛠️ 환경변수 설정 표 (.env.local / Vercel)
 
 | 환경변수명 | 설명 | 비고 |
 |---|---|---|
 | `NOTION_API_KEY` | 노션 내부 통합 시크릿 토큰 (`ntn_...`) | 필수 (서버 전용) |
-| `NOTION_CHALLENGE_DB_ID` | `1주 1권 챌린지` DB ID (`ea45d293...`) | 필수 |
-| `NOTION_BOOK_DB_ID` | `1주 1권 읽기 책기록` DB ID (`80ec125c...`) | 필수 |
-| `NOTION_LOG_DB_ID` | `독서일지기록` DB ID (`b3064ad0...`) | 필수 |
-| `NOTION_INSIGHT_DB_ID` | `3️⃣ 문장수집 DB` ID (`ceb9a421...`) | 필수 |
-| `GEMINI_API_KEY` | Google Gemini API 키 (리포트 & OCR) | 필수 |
-| `ALADIN_API_KEY` | 알라딘 TTB 키 (쪽수 자동 추출) | 권장 |
-| `KAKAO_REST_API_KEY` | 카카오 REST API 키 | 권장 |
+| `NOTION_CHALLENGE_DB_ID` | 복제한 `1주 1권 챌린지` 데이터베이스 ID (32자리) | 필수 |
+| `NOTION_BOOK_DB_ID` | 복제한 `1주 1권 읽기 책기록` 데이터베이스 ID (32자리) | 필수 |
+| `NOTION_LOG_DB_ID` | 복제한 `독서일지기록` 데이터베이스 ID (32자리) | 필수 |
+| `NOTION_INSIGHT_DB_ID` | 복제한 `문장수집 DB` 데이터베이스 ID (32자리) | 필수 |
+| `GEMINI_API_KEY` | Google Gemini API 키 (리포트 · 블로그 · OCR) | 필수 |
+| `ALADIN_API_KEY` | 알라딘 TTB 키 (도서 쪽수 100% 자동 추출) | 권장 |
+| `KAKAO_REST_API_KEY` | 카카오 REST API 키 | 선택 |
 | `NAVER_CLIENT_ID` | 네이버 검색 클라이언트 ID | 선택 |
 | `NAVER_CLIENT_SECRET` | 네이버 검색 클라이언트 시크릿 | 선택 |
 | `NL_API_KEY` | 국립중앙도서관 ISBN 연동 키 | 선택 |
-| `NOTION_PAGE_URL` | 푸터 '노션 데이터베이스 열기' 바로가기 URL | 선택 (미설정 시 비공개 유지) |
+| `NOTION_PAGE_URL` | 푸터 '노션 데이터베이스 열기' 바로가기 URL (복제한 내 노션 페이지 주소) | 선택 (미설정 시 비공개 유지) |
 
 ---
 
 ## 💻 로컬 개발 환경 실행
 
 ```bash
-# 1. 의존성 설치 (Google Drive 가상 드라이브가 아닌 로컬 NTFS 경로 권장)
+# 1. 의존성 설치 (Google Drive 가상 드라이브가 아닌 일반 로컬 폴더 권장)
 npm install
 
-# 2. .env.local 환경변수 설정 (.env.example 참조)
+# 2. .env.example을 복사해 .env.local 생성 후 실제 키 입력
+cp .env.example .env.local
 
 # 3. 로컬 개발 서버 실행
 npm run dev

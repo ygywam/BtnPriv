@@ -19,3 +19,4 @@
 - 2026-11-12 · 서재·개발로그 non-passive 휠 격리 & 스포트라이트 포스트잇 사용법 투어 전환 · 서재 Dock 상단 여백 확대(90px) 및 `passive: false` 네이티브 `wheel` 리스너로 영역 위 세로 스크롤 차단·가로 이동 구현, 개발로그 상단 버전 배지 명시적 색상 통일 및 불필요한 안내 문구 제거, 기존 사용법 모달을 삭제하고 바깥 블러·박스 강조·따라다니는 포스트잇·마지막 가이드 영상으로 이어지는 `SpotlightTutorial` 도입.
 - 2026-11-12 · 개발로그 포스트잇 Dock 호버 확대 & scroll-snap 스냅백 제거 · `.devlog-postit-track`의 `scroll-snap-type`으로 인한 마우스 휠 스냅백 및 `.devlog-modal-card` 세로 스크롤 간섭을 제거하고, 서재와 동일한 Dock 물결 확대(`getDockCardStyle`)와 가로 휠 스크롤을 적용.
 - 2026-11-12 · 개발로그 휠 관성 보간(rAF) 및 상단 여백·세로 오버플로우 보완 · `overflow-y: hidden` + `padding-top: 64px`로 확대 카드의 트랙 세로 오버플로우를 제거하고, `deltaMode` 보정 + `requestAnimationFrame` 목표치 보간 스크롤로 마우스 휠 감도를 개선.
+- 2026-11-12 · Private GitHub 배포 세팅 및 보안 마스킹·셋업 가이드(`docs/SETUP_GUIDE.md`) 완비 · `.env.example` 내 개인 노션 DB ID를 마스킹하고, 중복 대용량 영상 파일(`.gitignore`) 및 `.env.local` 커밋 차단을 검증한 뒤 배포용 노션 템플릿·API 키 발급·Vercel 배포 안내서를 작성하고 Git 저장소(`main`)를 초기화.
