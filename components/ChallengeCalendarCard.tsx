@@ -197,7 +197,7 @@ export default function ChallengeCalendarCard({
   const selectedDayRecords = selectedDate ? recordsByDate[selectedDate] : undefined;
 
   return (
-    <section className="panel cal-panel">
+    <section className="panel cal-panel" data-tour="calendar">
       {/* 카드 상단: 월별 타이틀 + 챌린지 선택 + AI 리포트 */}
       <div className="cal-top-bar">
         <div className="cal-title-wrap">

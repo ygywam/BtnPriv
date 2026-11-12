@@ -126,7 +126,7 @@ export default function HomeTab({
   return (
     <div className="home-layout">
       {/* 1. 상단 둥근 도서 검색바 */}
-      <section className="home-search-bar-wrap">
+      <section className="home-search-bar-wrap" data-tour="search-bar">
         <div className="home-search-pill">
           <span className="home-search-icon" aria-hidden="true">🔍</span>
           <input
@@ -195,7 +195,7 @@ export default function HomeTab({
         {/* 좌측 열 (모바일 첫 번째): 지금 읽는 책 + 최근 독서기록 */}
         <div className="home-col-primary">
           {/* 지금 읽는 책 섹션 */}
-          <section className="panel reading-now-panel">
+          <section className="panel reading-now-panel" data-tour="reading-now">
             <div className="home-section-head">
               <div className="home-section-title">
                 <span className="home-bookmark-badge" aria-hidden="true">🔖</span>
@@ -280,7 +280,7 @@ export default function HomeTab({
           </div>
 
           {/* 최근 독서기록 섹션 */}
-          <section className="panel recent-feed-panel">
+          <section className="panel recent-feed-panel" data-tour="recent-feed">
             <div className="home-section-head">
               <div className="home-section-title">
                 <span className="home-book-badge" aria-hidden="true">📖</span>

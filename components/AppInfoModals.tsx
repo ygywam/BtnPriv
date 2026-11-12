@@ -10,8 +10,6 @@ interface AppInfoModalsProps {
   onChangeSearchApiType: (t: 'aladin' | 'kakao' | 'naver') => void;
   showSettingsModal: boolean;
   setShowSettingsModal: (v: boolean) => void;
-  showTutorialModal: boolean;
-  setShowTutorialModal: (v: boolean) => void;
   showDevLogModal: boolean;
   setShowDevLogModal: (v: boolean) => void;
   showPrivacyModal: boolean;
@@ -21,7 +19,7 @@ interface AppInfoModalsProps {
 }
 
 /**
- * 설정, 사용법(영상 포함), 개발로그, 개인정보처리방침, 저작권 안내 모달 모음
+ * 설정, 개발로그(포스트잇 가로 휠 캐러셀), 개인정보처리방침, 저작권 안내 모달 모음
  */
 export default function AppInfoModals({
   theme,
@@ -30,8 +28,6 @@ export default function AppInfoModals({
   onChangeSearchApiType,
   showSettingsModal,
   setShowSettingsModal,
-  showTutorialModal,
-  setShowTutorialModal,
   showDevLogModal,
   setShowDevLogModal,
   showPrivacyModal,
@@ -104,66 +100,6 @@ export default function AppInfoModals({
                     </button>
                   ))}
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 사용법 튜토리얼 모달 */}
-      {showTutorialModal && (
-        <div className="modal">
-          <div className="modal-backdrop" onClick={() => setShowTutorialModal(false)} />
-          <div className="modal-card" style={{ maxWidth: '640px' }}>
-            <div className="section-title-row">
-              <div>
-                <span className="text-xs bg-amber-800 text-white font-bold px-2 py-0.5 rounded-full inline-block mb-1">
-                  Book Tuning v4.4
-                </span>
-                <h2>📖 북튜닝 사용 안내 가이드</h2>
-              </div>
-              <button
-                type="button"
-                className="px-4 py-2 text-xs font-bold rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 transition"
-                onClick={() => setShowTutorialModal(false)}
-              >
-                닫기
-              </button>
-            </div>
-            <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-2 text-xs leading-relaxed text-stone-700">
-              <div className="p-3 bg-stone-100 rounded-2xl border border-stone-200 overflow-hidden">
-                <div className="flex items-center justify-between mb-2 px-1">
-                  <h4 className="font-bold text-sm flex items-center gap-1.5 text-stone-900">
-                    <span>🎬</span> 북튜닝 홍보 & 사용 가이드 영상
-                  </h4>
-                  <span className="text-[11px] text-stone-500">재생을 누르면 시청할 수 있습니다</span>
-                </div>
-                <div className="rounded-xl overflow-hidden bg-stone-900 aspect-video flex items-center justify-center">
-                  <video controls playsInline preload="metadata" className="w-full h-full object-contain" poster="/icon.svg">
-                    <source src="/booktuning_intro.mp4" type="video/mp4" />
-                    <source src="/북튜닝_홍보영상_booktuning.mp4" type="video/mp4" />
-                    브라우저가 동영상 재생을 지원하지 않습니다.
-                  </video>
-                </div>
-              </div>
-
-              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
-                <h4 className="font-bold text-amber-900 text-sm mb-1">🎯 홈 대시보드 & 챌린지 캘린더</h4>
-                <p>
-                  홈 화면에서 <strong>지금 읽는 책</strong> 진도를 바로 확인하고, 챌린지 기간 기반 <strong>월별 독서 캘린더</strong>와 목표 권수를 한눈에 볼 수 있습니다.
-                </p>
-              </div>
-              <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
-                <h4 className="font-bold text-stone-800 text-sm mb-1">📚 서재 · 챌린지 · 피드 · 도감</h4>
-                <p>
-                  서재에서 전체 책을 모아보고, 챌린지에서 기간별 카드를 관리하며, 피드에서 시간순 기록을, 도감에서 완독 책 표지를 수집할 수 있습니다.
-                </p>
-              </div>
-              <div className="p-3 bg-orange-50 rounded-xl border border-orange-200">
-                <h4 className="font-bold text-orange-950 text-sm mb-1">✨ Gemini AI 월간 독서 리포트</h4>
-                <p>
-                  챌린지 카드 또는 캘린더의 <strong>[AI 리포트]</strong> 버튼을 누르면 총평, 인사이트 셀렉션, 블로그 완성글이 작성되어 노션 본문에 토글로 저장됩니다.
-                </p>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Book, Challenge } from '@/lib/types';
 
 interface LibraryTabProps {
@@ -27,6 +27,7 @@ export default function LibraryTab({
   const [keyword, setKeyword] = useState('');
 
   // Dock & 휠 캐러셀 상태
+  const shellRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -56,15 +57,26 @@ export default function LibraryTab({
       });
   }, [books, scope, currentChallenge, statusFilter, sortBy, keyword]);
 
-  // 세로 휠 회전 → 가로 스크롤 변환
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    const el = trackRef.current;
-    if (!el) return;
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      e.preventDefault();
-      el.scrollLeft += e.deltaY * 1.25;
-    }
-  };
+  // 서재 Dock 섹션 위에서 마우스 휠 회전 시 페이지 상하 스크롤을 막고 가로 캐러셀만 이동 (non-passive)
+  useEffect(() => {
+    const shell = shellRef.current;
+    if (!shell) return;
+
+    const onNativeWheel = (e: WheelEvent) => {
+      const track = trackRef.current;
+      if (!track) return;
+      if (Math.abs(e.deltaY) >= Math.abs(e.deltaX)) {
+        e.preventDefault();
+        e.stopPropagation();
+        track.scrollLeft += e.deltaY * 1.3;
+      }
+    };
+
+    shell.addEventListener('wheel', onNativeWheel, { passive: false });
+    return () => {
+      shell.removeEventListener('wheel', onNativeWheel);
+    };
+  }, [displayedBooks.length]);
 
   const scrollByStep = (dir: -1 | 1) => {
     const el = trackRef.current;
@@ -202,7 +214,7 @@ export default function LibraryTab({
           <p className="text-xs text-stone-500">필터를 바꾸거나 홈 탭에서 도서를 검색해 추가해 보세요.</p>
         </div>
       ) : (
-        <div className="panel library-dock-shell">
+        <div ref={shellRef} className="panel library-dock-shell">
           <div className="library-dock-toolbar">
             <div className="library-dock-spotlight">
               {focusedBook ? (
@@ -239,7 +251,6 @@ export default function LibraryTab({
 
           <div
             ref={trackRef}
-            onWheel={handleWheel}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={stopDragging}

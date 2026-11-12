@@ -87,7 +87,7 @@ export default function BottomNav({ activeTab, onChange, counts }: BottomNavProp
   return (
     <>
       {/* PC용 상단 내비게이션 탭 (768px 이상) */}
-      <nav className="desktop-top-nav" aria-label="주 메뉴">
+      <nav className="desktop-top-nav" data-tour="main-nav" aria-label="주 메뉴">
         {NAV_ITEMS.map((item) => {
           const isActive = activeTab === item.id;
           const badge = getBadge(item.id);
@@ -109,7 +109,7 @@ export default function BottomNav({ activeTab, onChange, counts }: BottomNavProp
       </nav>
 
       {/* 모바일용 하단 고정 바텀 내비게이션 (767px 이하) */}
-      <nav className="mobile-bottom-nav" aria-label="모바일 하단 메뉴">
+      <nav className="mobile-bottom-nav" data-tour="main-nav" aria-label="모바일 하단 메뉴">
         {NAV_ITEMS.map((item) => {
           const isActive = activeTab === item.id;
           return (

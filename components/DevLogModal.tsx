@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { DEV_LOG_VERSIONS, DevLogEntry } from '@/lib/devLogs';
 
 function renderCardIcon(type: DevLogEntry['iconType']) {
-  const cls = 'w-7 h-7 text-stone-700/80';
+  const cls = 'w-6 h-6 text-stone-700/80';
   switch (type) {
     case 'layout':
       return (
@@ -55,22 +55,41 @@ interface DevLogModalProps {
 }
 
 /**
- * 포스트잇 스타일 가로 스크롤 개발로그 모달 (마우스 휠 + 드래그 + 화살표 지원)
+ * 포스트잇 스타일 가로 휠 캐러셀 개발로그 모달
  */
 export default function DevLogModal({ onClose }: DevLogModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef({ x: 0, scrollLeft: 0 });
 
-  // 마우스 세로 휠을 가로 스크롤로 부드럽게 변환
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    const el = trackRef.current;
-    if (!el) return;
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      e.preventDefault();
-      el.scrollLeft += e.deltaY * 1.15;
+  // 모달 열림 중 배경 페이지 스크롤 잠금 + 모달 위 어디서든 마우스 세로 휠 → 가로 캐러셀 이동 (non-passive)
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const modalEl = modalRef.current;
+    const onNativeWheel = (e: WheelEvent) => {
+      const track = trackRef.current;
+      if (!track) return;
+      if (Math.abs(e.deltaY) >= Math.abs(e.deltaX)) {
+        e.preventDefault();
+        e.stopPropagation();
+        track.scrollLeft += e.deltaY * 1.3;
+      }
+    };
+
+    if (modalEl) {
+      modalEl.addEventListener('wheel', onNativeWheel, { passive: false });
     }
-  };
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      if (modalEl) {
+        modalEl.removeEventListener('wheel', onNativeWheel);
+      }
+    };
+  }, []);
 
   const scrollByCard = (direction: -1 | 1) => {
     const el = trackRef.current;
@@ -96,21 +115,17 @@ export default function DevLogModal({ onClose }: DevLogModalProps) {
   const stopDragging = () => setIsDragging(false);
 
   return (
-    <div className="modal">
+    <div ref={modalRef} className="modal">
       <div className="modal-backdrop" onClick={onClose} />
       <div className="modal-card devlog-modal-card" style={{ maxWidth: '900px' }}>
-        <div className="section-title-row mb-2">
-          <div>
-            <h2>📝 북튜닝 개발로그 ({DEV_LOG_VERSIONS.length}개 버전)</h2>
-            <p className="subtitle">마우스 휠이나 드래그로 v1.0부터 v4.4까지 포스트잇 카드를 가로로 넘겨보세요.</p>
-          </div>
+        <div className="section-title-row mb-1">
+          <h2>📝 북튜닝 개발로그</h2>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <button
               type="button"
               onClick={() => scrollByCard(-1)}
               className="devlog-arrow-btn"
               aria-label="이전 버전 카드"
-              title="이전 카드"
             >
               ‹
             </button>
@@ -119,7 +134,6 @@ export default function DevLogModal({ onClose }: DevLogModalProps) {
               onClick={() => scrollByCard(1)}
               className="devlog-arrow-btn"
               aria-label="다음 버전 카드"
-              title="다음 카드"
             >
               ›
             </button>
@@ -132,7 +146,6 @@ export default function DevLogModal({ onClose }: DevLogModalProps) {
         {/* 가로 포스트잇 캐러셀 트랙 */}
         <div
           ref={trackRef}
-          onWheel={handleWheel}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={stopDragging}
@@ -142,29 +155,35 @@ export default function DevLogModal({ onClose }: DevLogModalProps) {
           {DEV_LOG_VERSIONS.map((item) => (
             <article
               key={item.version}
-              className={`devlog-postit-card bg-gradient-to-br ${item.gradientClass} ${item.tiltClass}`}
+              className={`devlog-postit-card ${item.tiltClass}`}
+              style={{
+                background: item.cardBg,
+                borderColor: item.cardBorder,
+              }}
             >
-              {/* 상단 포스트잇 테이프 장식 */}
               <div className="devlog-postit-tape" aria-hidden="true" />
 
               <div className="flex items-center justify-between gap-2 mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-mono text-stone-500 font-bold">( {item.number} )</span>
-                  <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm ${item.badgeClass}`}>
+                  <span
+                    className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm"
+                    style={{ backgroundColor: item.badgeBg, color: '#ffffff' }}
+                  >
                     {item.version}
                   </span>
                 </div>
                 {renderCardIcon(item.iconType)}
               </div>
 
-              <div className="mb-3">
+              <div className="mb-2.5">
                 <div className="text-[11px] font-bold text-stone-500 mb-0.5">{item.date}</div>
-                <h3 className="text-sm sm:text-base font-extrabold text-stone-900 leading-snug">
+                <h3 className="text-sm sm:text-[15px] font-extrabold text-stone-900 leading-snug">
                   {item.title}
                 </h3>
               </div>
 
-              <ul className="space-y-1.5 text-xs text-stone-700 leading-relaxed flex-1 overflow-y-auto pr-1">
+              <ul className="space-y-1.5 text-[11.5px] sm:text-xs text-stone-700 leading-relaxed flex-1">
                 {item.items.map((line, i) => (
                   <li key={i} className="flex items-start gap-1.5">
                     <span className="text-amber-700 font-bold mt-0.5 flex-shrink-0">•</span>
@@ -172,11 +191,6 @@ export default function DevLogModal({ onClose }: DevLogModalProps) {
                   </li>
                 ))}
               </ul>
-
-              <div className="mt-3 pt-2 border-t border-black/5 flex items-center justify-between text-[10.5px] text-stone-500 font-semibold">
-                <span>Book Tuning Note</span>
-                <span>{item.version}</span>
-              </div>
             </article>
           ))}
         </div>

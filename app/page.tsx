@@ -13,6 +13,7 @@ import FeedTab from '@/components/tabs/FeedTab';
 import DexTab from '@/components/tabs/DexTab';
 import ManualBookModal from '@/components/ManualBookModal';
 import AppInfoModals from '@/components/AppInfoModals';
+import SpotlightTutorial from '@/components/SpotlightTutorial';
 
 export default function Home() {
   // 1. 테마 및 검색 엔진 상태
@@ -268,7 +269,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="header-nav-row">
+        <div className="header-nav-row" data-tour="header-utils">
           <button
             type="button"
             className="ghost-button"
@@ -477,14 +478,18 @@ export default function Home() {
         onChangeSearchApiType={changeSearchApiType}
         showSettingsModal={showSettingsModal}
         setShowSettingsModal={setShowSettingsModal}
-        showTutorialModal={showTutorialModal}
-        setShowTutorialModal={setShowTutorialModal}
         showDevLogModal={showDevLogModal}
         setShowDevLogModal={setShowDevLogModal}
         showPrivacyModal={showPrivacyModal}
         setShowPrivacyModal={setShowPrivacyModal}
         showCopyrightModal={showCopyrightModal}
         setShowCopyrightModal={setShowCopyrightModal}
+      />
+
+      <SpotlightTutorial
+        isOpen={showTutorialModal}
+        onClose={() => setShowTutorialModal(false)}
+        onEnsureHomeTab={() => setActiveTab('home')}
       />
     </div>
   );
