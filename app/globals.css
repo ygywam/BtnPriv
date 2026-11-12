@@ -2491,6 +2491,10 @@ p {
    DevLog Post-it Horizontal Wheel Carousel
    ========================================================================== */
 
+.devlog-modal-backdrop {
+  backdrop-filter: blur(4px);
+}
+
 .devlog-modal-card {
   width: 94vw;
   max-width: 920px;
@@ -2523,8 +2527,8 @@ p {
   align-items: flex-end;
   gap: 16px;
   overflow-x: auto;
-  overflow-y: visible;
-  padding: 48px 24px 22px;
+  overflow-y: hidden;
+  padding: 64px 24px 24px;
   cursor: grab;
   -webkit-overflow-scrolling: touch;
 }
@@ -2545,6 +2549,7 @@ p {
   display: flex;
   flex-direction: column;
   transform-origin: bottom center;
+  will-change: transform;
   box-shadow: 0 8px 20px rgba(45, 30, 15, 0.08), 0 2px 6px rgba(45, 30, 15, 0.05);
   transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.24s ease,
@@ -2572,7 +2577,7 @@ p {
 @media (max-width: 767px) {
   .devlog-postit-track {
     gap: 12px;
-    padding: 14px 4px 12px;
+    padding: 34px 8px 16px;
   }
 
   .devlog-postit-card {

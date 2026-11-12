@@ -60,23 +60,55 @@ interface DevLogModalProps {
 export default function DevLogModal({ onClose }: DevLogModalProps) {
   const shellRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const targetScrollRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef({ x: 0, scrollLeft: 0 });
 
-  // 서재와 동일한 non-passive 네이티브 휠 리스너 + 배경 스크롤 잠금
+  // 모달 전체 위에서 마우스 휠을 부드러운 관성 가로 스크롤로 전환 (non-passive)
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+
+    const animateScroll = () => {
+      const track = trackRef.current;
+      if (!track || targetScrollRef.current === null) {
+        rafRef.current = null;
+        return;
+      }
+      const diff = targetScrollRef.current - track.scrollLeft;
+      if (Math.abs(diff) < 0.8) {
+        track.scrollLeft = targetScrollRef.current;
+        targetScrollRef.current = null;
+        rafRef.current = null;
+        return;
+      }
+      track.scrollLeft += diff * 0.28;
+      rafRef.current = requestAnimationFrame(animateScroll);
+    };
 
     const shell = shellRef.current;
     const onNativeWheel = (e: WheelEvent) => {
       const track = trackRef.current;
       if (!track) return;
-      if (Math.abs(e.deltaY) >= Math.abs(e.deltaX)) {
-        e.preventDefault();
-        e.stopPropagation();
-        track.scrollLeft += e.deltaY * 1.3;
+
+      const rawDelta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      if (rawDelta === 0) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      // deltaMode(0: px, 1: line, 2: page) 보정 후 넉넉한 배수로 부드럽게 이동
+      const unitMultiplier = e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? 360 : 2.2;
+      const step = rawDelta * unitMultiplier;
+
+      const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+      const base = targetScrollRef.current !== null ? targetScrollRef.current : track.scrollLeft;
+      targetScrollRef.current = Math.max(0, Math.min(maxScroll, base + step));
+
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(animateScroll);
       }
     };
 
@@ -89,18 +121,23 @@ export default function DevLogModal({ onClose }: DevLogModalProps) {
       if (shell) {
         shell.removeEventListener('wheel', onNativeWheel);
       }
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
     };
   }, []);
 
   const scrollByCard = (direction: -1 | 1) => {
     const el = trackRef.current;
     if (!el) return;
+    targetScrollRef.current = null;
     el.scrollBy({ left: direction * 290, behavior: 'smooth' });
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const el = trackRef.current;
     if (!el) return;
+    targetScrollRef.current = null;
     setIsDragging(true);
     dragStartRef.current = { x: e.pageX - el.offsetLeft, scrollLeft: el.scrollLeft };
   };
@@ -109,7 +146,7 @@ export default function DevLogModal({ onClose }: DevLogModalProps) {
     if (!isDragging || !trackRef.current) return;
     e.preventDefault();
     const x = e.pageX - trackRef.current.offsetLeft;
-    const walk = (x - dragStartRef.current.x) * 1.25;
+    const walk = (x - dragStartRef.current.x) * 1.3;
     trackRef.current.scrollLeft = dragStartRef.current.scrollLeft - walk;
   };
 
@@ -134,7 +171,7 @@ export default function DevLogModal({ onClose }: DevLogModalProps) {
 
   return (
     <div ref={shellRef} className="modal">
-      <div className="modal-backdrop" onClick={onClose} />
+      <div className="modal-backdrop devlog-modal-backdrop" onClick={onClose} />
       <div className="modal-card devlog-modal-card" style={{ maxWidth: '920px' }}>
         <div className="section-title-row mb-0">
           <h2>📝 북튜닝 개발로그</h2>
