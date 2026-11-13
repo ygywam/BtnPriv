@@ -164,11 +164,11 @@ export default function ChallengeCalendarCard({
     };
   }, [periodLogs, periodInsights, logs, periodStart, completedCount]);
 
-  // 달력 그리드 생성 (월요일 시작: M T W T F S S)
+  // 달력 그리드 생성 (일요일 시작: S M T W T F S)
   const calendarCells = useMemo(() => {
     const [y, m] = viewYearMonth.split('-').map(Number);
     if (!y || !m) return [];
-    const firstDayOfWeek = (new Date(y, m - 1, 1).getDay() + 6) % 7; // 월=0 .. 일=6
+    const firstDayOfWeek = new Date(y, m - 1, 1).getDay(); // 일=0 .. 토=6
     const daysInMonth = new Date(y, m, 0).getDate();
     const cells: Array<{ day: number; dateStr: string } | null> = [];
 
@@ -244,8 +244,8 @@ export default function ChallengeCalendarCard({
           </div>
 
           <div className="cal-weekdays">
-            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((w, i) => (
-              <span key={i} className={i === 6 ? 'is-sun' : ''}>{w}</span>
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((w, i) => (
+              <span key={i} className={i === 0 ? 'is-sun' : ''}>{w}</span>
             ))}
           </div>
 
