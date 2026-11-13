@@ -12,7 +12,7 @@
 1. **노션 템플릿 복제**: **[개인 독서 챌린지 (배포용) | Notion](https://app.notion.com/p/record-tuner/2a59a421189580169fa9d158783cee29)** 링크를 열어 우측 상단 **`복제(Duplicate)`** 로 내 워크스페이스에 복사합니다.
 2. **노션 API 발급 & 연결**: [노션 API 통합](https://www.notion.so/profile/integrations)에서 프라이빗 시크릿 키(`NOTION_API_KEY`)를 만든 뒤, 복제한 노션 페이지 우측 상단 **`⋯` → `연결(Connections)`** 에 방금 만든 통합 앱을 반드시 연결합니다.
 3. **4대 DB ID & 페이지 주소 확인**: 복제한 페이지 안의 4개 DB(`1주 1권 챌린지`, `1주 1권 읽기 책기록`, `독서일지기록`, `문장수집 DB`)를 각각 전체 페이지로 열어 주소의 `?v=` 앞 32자리 ID를 복사하고, 최상위 노션 페이지 주소(`NOTION_PAGE_URL`)도 복사합니다.
-4. **API 키 & 배포**: [Google AI Studio](https://aistudio.google.com/apikey)에서 Gemini 키(`GEMINI_API_KEY`)를, [알라딘 TTB](https://www.aladin.co.kr/ttb/wblog_manage.aspx)(또는 카카오·네이버)에서 도서 검색 키를 발급받아 **Vercel Environment Variables** 또는 로컬 `.env.local`에 입력하면 바로 사용할 수 있습니다.
+4. **API 키 & 배포**: [Google AI Studio](https://aistudio.google.com/apikey)에서 Gemini 키(`GEMINI_API_KEY`)를, [카카오 개발자센터](https://developers.kakao.com/)의 REST API 키(`KAKAO_REST_API_KEY`)와 [국립중앙도서관](https://www.nl.go.kr/NL/contents/N31101030700.do) 인증키(`NL_API_KEY`)를 발급받아 **Vercel Environment Variables** 또는 로컬 `.env.local`에 입력하면 바로 사용할 수 있습니다. *(※ 알라딘·네이버 API 공식 종료에 따른 카카오+국립중앙도서관 표준 하이브리드 탑재)*
 
 ---
 
@@ -36,8 +36,8 @@
    - 챌린지 기간 동안 모은 일지와 문장을 종합 분석해 **[독서 리포트]**와 **[블로그 완성글]**을 생성하고 노션 챌린지 페이지 본문에 접이식 토글 블록으로 영구 저장합니다.
    - 문장수집 시 책 본문/손글씨 사진을 업로드하면 Gemini OCR로 텍스트를 추출하고 노션 페이지 본문에 이미지 블록을 함께 첨부합니다.
 
-5. **도서 3대 검색 엔진 & 표지/페이지 커버 동시 연동**
-   - 알라딘 TTB API(쪽수 자동 추출), 카카오 도서, 네이버 도서 검색을 지원하며, 도서 등록·수정 시 노션 `표지` 속성과 페이지 상단 `cover`를 동시에 저장합니다.
+5. **카카오 + 국립중앙도서관(NL) 하이브리드 표준 도서 검색 & 페이지 커버 동시 연동**
+   - 알라딘(2026.10.30) 및 네이버(2026.07.31) 검색 API 서비스 공식 종료에 대응하여, **카카오 도서 검색**(고화질 표지·서지정보)과 **국립중앙도서관 서지정보 API**(13자리 ISBN 기반 총 쪽수 자동 추출)를 지능형 하이브리드로 결합했습니다. 도서 등록·수정 시 노션 `표지` 속성과 페이지 상단 `cover`를 동시에 안전하게 저장합니다.
 
 6. **스포트라이트 포스트잇 사용법 투어 & Dock 개발로그**
    - 상단 `📖 사용법` 클릭 시 화면 각 영역을 박스 강조하며 포스트잇 설명이 따라다니고 마지막에 가이드 영상이 재생됩니다.
@@ -58,11 +58,11 @@
 | `NOTION_LOG_DB_ID` | 복제한 `독서일지기록` 데이터베이스 ID (32자리) | 필수 |
 | `NOTION_INSIGHT_DB_ID` | 복제한 `문장수집 DB` 데이터베이스 ID (32자리) | 필수 |
 | `GEMINI_API_KEY` | Google Gemini API 키 (리포트 · 블로그 · OCR) | 필수 |
-| `ALADIN_API_KEY` | 알라딘 TTB 키 (도서 쪽수 100% 자동 추출) | 권장 |
-| `KAKAO_REST_API_KEY` | 카카오 REST API 키 | 선택 |
-| `NAVER_CLIENT_ID` | 네이버 검색 클라이언트 ID | 선택 |
-| `NAVER_CLIENT_SECRET` | 네이버 검색 클라이언트 시크릿 | 선택 |
-| `NL_API_KEY` | 국립중앙도서관 ISBN 연동 키 | 선택 |
+| `KAKAO_REST_API_KEY` | 카카오 REST API 키 (도서 검색 및 표지 연동) | 필수 (표준 엔진) |
+| `NL_API_KEY` | 국립중앙도서관 서지정보 인증키 (총 쪽수 자동 연동) | 필수 (표준 엔진) |
+| `ALADIN_API_KEY` | 알라딘 TTB 키 *(2026.10.30 서비스 공식 종료)* | 비활성화 (레거시) |
+| `NAVER_CLIENT_ID` | 네이버 검색 클라이언트 ID *(2026.07.31 서비스 공식 종료)* | 비활성화 (레거시) |
+| `NAVER_CLIENT_SECRET` | 네이버 검색 클라이언트 시크릿 *(2026.07.31 서비스 공식 종료)* | 비활성화 (레거시) |
 | `NOTION_PAGE_URL` | 푸터 '노션 데이터베이스 열기' 바로가기 URL (복제한 내 노션 페이지 주소) | 선택 (미설정 시 비공개 유지) |
 
 ---
@@ -107,13 +107,12 @@ npm run dev
 - **Notion SDK for JavaScript (@notionhq/client)**: MIT License (© Notion Labs, Inc.)
 - **Radix UI & Lucide Icons Iconography**: MIT License
 
-### 4. 외부 API 서비스 이용약관 준수
+### 4. 외부 API 서비스 이용약관 준수 및 서비스 현황
 - **Notion API**: Notion Labs, Inc. API Terms & Privacy Policy (개인 노션 데이터베이스 실시간 동기화)
 - **Google Gemini API**: Google APIs Terms of Service & Generative AI Additional Terms (독서 리포트·블로그 생성 및 본문 사진 OCR)
-- **알라딘 도서 검색 Open API**: (주)알라딘커뮤니케이션 TTB API 약관 (도서 정보 및 전체 쪽수 연동)
-- **카카오 도서 검색 API**: Kakao Corp. 오픈API 이용약관
-- **네이버 도서 검색 API**: NAVER Corp. 오픈API 이용약관
-- **국립중앙도서관 Open API**: 국립중앙도서관 공공데이터 이용조건
+- **카카오 도서 검색 API & 국립중앙도서관 서지정보 Open API**: Kakao Corp. 오픈API 및 국립중앙도서관 공공데이터 이용조건 준수 (표지·서지정보 및 총 페이지수 자동 추출 하이브리드 표준 연동)
+- **알라딘 도서 검색 Open API**: (주)알라딘커뮤니케이션 TTB API *(2026.10.30 서비스 공식 종료 고지)*
+- **네이버 도서 검색 API**: NAVER Corp. 오픈API *(2026.07.31 서비스 공식 종료 고지)*
 
 ### 5. 도서 서지 데이터 및 표지 이미지 저작권
 - 도서 검색 및 서재에 표시되는 책 표지 이미지, 소개글, 출판사 및 저자 정보의 저작권은 해당 원저작자 및 출판사에 귀속되며, 본 서비스는 개인의 비영리 독서 기록 및 공정 이용(Fair Use) 범위 내에서만 해당 정보를 안전하게 표시합니다.

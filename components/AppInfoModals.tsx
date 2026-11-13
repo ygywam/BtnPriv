@@ -80,25 +80,66 @@ export default function AppInfoModals({
 
               <div>
                 <label className="block text-xs font-bold text-stone-700 mb-2">도서 검색 엔진</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: 'aladin', label: '알라딘 (쪽수 자동)' },
-                    { id: 'kakao', label: '카카오' },
-                    { id: 'naver', label: '네이버' },
-                  ].map((eng) => (
-                    <button
-                      key={eng.id}
-                      type="button"
-                      onClick={() => onChangeSearchApiType(eng.id as any)}
-                      className={`py-2 px-2 text-xs font-bold rounded-xl border transition ${
-                        searchApiType === eng.id
-                          ? 'border-amber-700 bg-amber-100 text-amber-900 shadow-sm'
-                          : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
-                      }`}
-                    >
-                      {eng.label}
-                    </button>
-                  ))}
+                <div className="space-y-2">
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      {
+                        id: 'kakao',
+                        title: '카카오 도서 + 국립중앙도서관 쪽수 (표준 추천)',
+                        sub: '카카오 표지·서지정보와 국립중앙도서관(NL) 쪽수 자동 추출 하이브리드 연동',
+                        isStandard: true,
+                        disabled: false,
+                      },
+                      {
+                        id: 'aladin',
+                        title: '알라딘 TTB (서비스 종료: 2026.10.30)',
+                        sub: '알라딘 오픈API 공식 서비스 제공 종료로 사용 불가',
+                        isStandard: false,
+                        disabled: true,
+                      },
+                      {
+                        id: 'naver',
+                        title: '네이버 검색 (서비스 종료: 2026.07.31)',
+                        sub: '네이버 검색 API 도서 지원 공식 종료로 사용 불가',
+                        isStandard: false,
+                        disabled: true,
+                      },
+                    ].map((eng) => {
+                      const isSelected = searchApiType === eng.id;
+                      return (
+                        <button
+                          key={eng.id}
+                          type="button"
+                          disabled={eng.disabled}
+                          onClick={() => !eng.disabled && onChangeSearchApiType(eng.id as any)}
+                          className={`p-2.5 text-left rounded-xl border transition flex flex-col gap-0.5 ${
+                            eng.disabled
+                              ? 'border-stone-200 bg-stone-50/80 text-stone-400 opacity-60 cursor-not-allowed'
+                              : isSelected
+                              ? 'border-amber-700 bg-amber-50 text-amber-950 shadow-sm ring-1 ring-amber-700/30'
+                              : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold flex items-center gap-1.5">
+                              {eng.title}
+                              {eng.isStandard && (
+                                <span className="bg-amber-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-extrabold">
+                                  기본 표준
+                                </span>
+                              )}
+                            </span>
+                            {isSelected && <span className="text-amber-800 text-xs font-bold">✓ 사용 중</span>}
+                          </div>
+                          <span className="text-[11px] text-stone-500 leading-snug">{eng.sub}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-stone-600 leading-relaxed">
+                    💡 <strong>도서 검색 엔진 하이브리드 안내</strong><br />
+                    알라딘(2026.10.30)과 네이버(2026.07.31) Open API 서비스가 종료됨에 따라, 북튜닝은 고화질 표지와 빠른 서지 검색을 지원하는 <strong>카카오 도서 검색</strong>과 대한민국 정식 출판 도서의 총 쪽수를 제공하는 <strong>국립중앙도서관(NL) 서지정보 API</strong>를 지능형 하이브리드로 결합하여 지원합니다.
+                  </div>
                 </div>
               </div>
             </div>
@@ -188,14 +229,13 @@ export default function AppInfoModals({
               </div>
 
               <div>
-                <h4 className="font-bold text-stone-900 text-xs mb-1">4. 외부 API 서비스 이용약관 준수</h4>
+                <h4 className="font-bold text-stone-900 text-xs mb-1">4. 외부 API 서비스 이용약관 및 서비스 현황</h4>
                 <ul className="list-disc pl-4 space-y-0.5 text-stone-600">
                   <li><strong>Notion API</strong>: Notion Labs, Inc. API Terms & Privacy Policy 준수 (개인 서재 DB 양방향 동기화)</li>
                   <li><strong>Google Gemini API</strong>: Google APIs Terms of Service 준수 (개인 감상문/월간 리포트 생성 및 사진 OCR)</li>
-                  <li><strong>알라딘 도서 검색 Open API</strong>: (주)알라딘커뮤니케이션 TTB API 약관 준수 (도서 서지 정보 및 쪽수 연동)</li>
-                  <li><strong>카카오 도서 검색 API</strong>: Kakao Corp. 오픈API 이용약관 준수</li>
-                  <li><strong>네이버 검색 API</strong>: NAVER Corp. 오픈API 이용약관 준수</li>
-                  <li><strong>국립중앙도서관 Open API</strong>: 국립중앙도서관 공공데이터 이용조건 준수</li>
+                  <li><strong>카카오 도서 검색 API & 국립중앙도서관 서지정보 Open API</strong>: Kakao Corp. 오픈API 및 국립중앙도서관 공공데이터 이용조건 준수 (표지·서지정보 및 총 페이지수 자동 추출 하이브리드 표준 연동)</li>
+                  <li><strong>알라딘 도서 검색 Open API</strong>: (주)알라딘커뮤니케이션 TTB API (2026.10.30 서비스 공식 종료 고지)</li>
+                  <li><strong>네이버 검색 API</strong>: NAVER Corp. 오픈API (2026.07.31 서비스 공식 종료 고지)</li>
                 </ul>
               </div>
 

@@ -72,18 +72,24 @@ https://www.notion.so/myworkspace/1주-1권-챌린지-1234567890abcdef1234567890
   1. [Google AI Studio](https://aistudio.google.com/apikey) 접속 및 로그인
   2. **`Create API key`** 클릭 → 발급된 `AIza...` 키 복사
 
-### 4-2. 도서 검색 API 키 (최소 1개 이상 권장)
-앱 내 `⚙️ 설정`에서 원하는 검색 엔진을 선택할 수 있습니다.
+### 4-2. 도서 검색 및 쪽수 연동 API 키 (표준 하이브리드 엔진)
+> 📢 **도서 검색 엔진 최신 현황 (중요 공지)**
+> - **알라딘 Open API**: **2026.10.30 서비스 공식 종료** (기존 TTBKey 사용 불가)
+> - **네이버 도서 검색 API**: **2026.07.31 서비스 공식 종료** (도서 검색 지원 중단)
+> - **북튜닝 표준 하이브리드 엔진**: 카카오의 풍부한 표지·서지정보와 국립중앙도서관의 공공 서지정보(총 쪽수 자동 연동)를 결합하여 운영됩니다.
 
-1. **알라딘 TTB 키 (`ALADIN_API_KEY` — 강력 추천)**
-   - 장점: 도서 검색 시 **전체 쪽수(페이지 수)가 100% 자동으로 채워집니다.**
-   - 발급: [알라딘 TTB 관리 페이지](https://www.aladin.co.kr/ttb/wblog_manage.aspx) 로그인 → TTBKey 발급
-2. **카카오 도서 검색 (`KAKAO_REST_API_KEY`)**
-   - 발급: [Kakao Developers](https://developers.kakao.com/) → 내 애플리케이션 추가 → **앱 키** 중 `REST API 키` 복사
-3. **네이버 도서 검색 (`NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`)**
-   - 발급: [네이버 개발자 센터](https://developers.naver.com/) → Application 등록(사용 API: `검색`) → Client ID / Secret 복사
-4. **국립중앙도서관 (`NL_API_KEY` — 선택)**
-   - 발급: [국립중앙도서관 오픈API](https://www.nl.go.kr/NL/contents/N31101030700.do) 인증키 신청
+1. **카카오 도서 검색 키 (`KAKAO_REST_API_KEY` — 표준 필수)**
+   - 역할: 도서 제목/저자 검색, 고화질 표지 이미지 및 출판사·ISBN 서지 정보 제공
+   - 발급: [Kakao Developers](https://developers.kakao.com/) 로그인 → `내 애플리케이션 추가` → 요약 정보의 **`REST API 키`** 복사
+
+2. **국립중앙도서관 서지정보 키 (`NL_API_KEY` — 표준 필수)**
+   - 역할: 카카오 도서 검색 결과의 ISBN 및 제목을 바탕으로 **정확한 전체 페이지 수(쪽수)를 자동 조회하여 매핑**
+   - 발급: [국립중앙도서관 오픈API](https://www.nl.go.kr/NL/contents/N31101030700.do) 회원가입 → `인증키 신청` → 즉시 발급된 키 복사
+
+> 💡 **카카오 + 국립중앙도서관 하이브리드 원리**: 카카오 API는 책 페이지(쪽수)를 제공하지 않고 국립중앙도서관 API는 표지 이미지를 제공하지 않습니다. 북튜닝은 카카오에서 표지와 도서 정보를 검색한 뒤, 13자리 ISBN을 통해 국립중앙도서관 서지정보에서 페이지 수를 자동으로 실시간 조회·결합하여 완벽한 도서 정보를 완성합니다.
+
+3. *(참고/레거시)* **알라딘 (`ALADIN_API_KEY`) & 네이버 (`NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`)**
+   - 2026년 하반기 서비스 종료에 따라 현재 북튜닝에서는 비활성화 처리되어 있습니다. 카카오와 국립중앙도서관 키를 발급받아 사용하세요.
 
 ---
 
@@ -99,7 +105,8 @@ https://www.notion.so/myworkspace/1주-1권-챌린지-1234567890abcdef1234567890
    - `NOTION_LOG_DB_ID`
    - `NOTION_INSIGHT_DB_ID`
    - `GEMINI_API_KEY`
-   - `ALADIN_API_KEY` *(및 사용할 카카오/네이버 키)*
+   - `KAKAO_REST_API_KEY` *(도서 검색 및 표지 연동)*
+   - `NL_API_KEY` *(국립중앙도서관 쪽수 자동 연동)*
    - `NOTION_PAGE_URL` *(선택)*
 4. **`Deploy`** 버튼을 누르면 몇 분 뒤 나만의 북튜닝 웹앱 주소(`https://...vercel.app`)가 생성됩니다!
 

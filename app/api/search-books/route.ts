@@ -2,38 +2,114 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-// 1. 국립중앙도서관(NL) 쪽수 자동 파싱 헬퍼
-async function fetchTotalPagesFromNL(isbn: string, nlKey?: string): Promise<number> {
-  if (!isbn || !nlKey) return 0;
-  const cleanIsbn = String(isbn).replace(/[^0-9X]/gi, '').trim();
-  if (!cleanIsbn) return 0;
-
-  try {
-    const url = `https://www.nl.go.kr/seoji/SearchApi.do?cert_key=${encodeURIComponent(nlKey)}&result_style=json&page_no=1&page_size=5&isbn=${encodeURIComponent(cleanIsbn)}`;
-    const res = await fetch(url, { next: { revalidate: 3600 } });
-    if (!res.ok) return 0;
-
-    const data = await res.json();
-    const docs = data.docs || data.item || [];
-
-    for (let i = 0; i < docs.length; i++) {
-      const pageStr = docs[i].PAGE || docs[i].page || '';
-      if (pageStr) {
-        const numbers = String(pageStr).match(/\d+/g);
-        if (numbers && numbers.length > 0) {
-          const numList = numbers.map(Number).filter((n) => n >= 5);
-          if (numList.length > 0) return Math.max(...numList);
-          return parseInt(numbers[0], 10);
-        }
-      }
-    }
-  } catch (e) {
-    console.warn('국립중앙도서관 쪽수 조회 건너뜀:', e);
+/**
+ * 카카오 ISBN 문자열(예: "1161571183 9791161571188")에서 13자리 및 10자리 ISBN을 분리 추출
+ */
+function extractIsbns(raw?: string): { isbn13: string; isbn10: string } {
+  if (!raw) return { isbn13: '', isbn10: '' };
+  const parts = String(raw).trim().split(/\s+/);
+  let isbn13 = '';
+  let isbn10 = '';
+  for (const p of parts) {
+    const clean = p.replace(/[^0-9Xx]/g, '').trim();
+    if (clean.length === 13 && !isbn13) isbn13 = clean;
+    else if (clean.length === 10 && !isbn10) isbn10 = clean;
   }
+  return { isbn13, isbn10 };
+}
+
+/**
+ * 국립중앙도서관 PAGE 문자열("267 p.", "약 640쪽 내외", "136", "320 p. : 삽도")에서 숫자 쪽수를 정밀 파싱
+ */
+function parsePageString(str?: string): number {
+  if (!str) return 0;
+  const s = String(str).trim();
+
+  // 1. "267 p.", "640쪽", "320p", "page 350" 등 명시적 단위 매칭
+  const pMatch = s.match(/(\d+)\s*(?:p|쪽|page)/i);
+  if (pMatch) {
+    const n = parseInt(pMatch[1], 10);
+    if (n >= 10 && n <= 5000) return n;
+  }
+
+  // 2. 숫자가 단순 들어있는 경우 ("136", "312")
+  const nums = s.match(/\d+/g);
+  if (nums) {
+    const valid = nums.map(Number).filter((n) => n >= 20 && n <= 3500);
+    if (valid.length > 0) {
+      // 본문 쪽수는 보통 마지막에 기재됨
+      return valid[valid.length - 1];
+    }
+  }
+
   return 0;
 }
 
-// 2. 카카오 도서 검색
+/**
+ * 국립중앙도서관(NL) 서지정보 API를 통해 쪽수를 3단계(ISBN13 ➔ ISBN10 ➔ 정제된 제목)로 자동 조회
+ */
+async function fetchTotalPagesFromNL(isbn13: string, isbn10: string, title?: string, nlKey?: string): Promise<number> {
+  if (!nlKey) return 0;
+
+  // 단일 ISBN으로 국립중앙도서관 Seoji API 호출
+  const queryByIsbn = async (isbn: string): Promise<number> => {
+    if (!isbn) return 0;
+    try {
+      const url = `https://www.nl.go.kr/seoji/SearchApi.do?cert_key=${encodeURIComponent(nlKey)}&result_style=json&page_no=1&page_size=5&isbn=${encodeURIComponent(isbn)}`;
+      const res = await fetch(url, { next: { revalidate: 3600 } });
+      if (!res.ok) return 0;
+
+      const data = await res.json();
+      const docs = data.docs || data.item || [];
+      for (const d of docs) {
+        const page = parsePageString(d.PAGE || d.FORM_DETAIL || d.FORM);
+        if (page > 0) return page;
+      }
+    } catch {
+      // 네트워크 일시 오류 시 다음 단계 진행
+    }
+    return 0;
+  };
+
+  // 1단계: 13자리 ISBN(978, 979) 우선 조회 (대부분의 신간·등록 도서)
+  let pages = await queryByIsbn(isbn13);
+  if (pages > 0) return pages;
+
+  // 2단계: 10자리 ISBN 2차 조회
+  pages = await queryByIsbn(isbn10);
+  if (pages > 0) return pages;
+
+  // 3단계: 부제/괄호 제거한 도서명으로 국립중앙도서관 제목 검색 폴백
+  if (title) {
+    try {
+      const cleanTitle = title
+        .replace(/\([^)]*\)|\[[^\]]*\]/g, '')
+        .replace(/[:：].*$/, '')
+        .trim()
+        .slice(0, 30);
+      if (cleanTitle.length >= 2) {
+        const url = `https://www.nl.go.kr/seoji/SearchApi.do?cert_key=${encodeURIComponent(nlKey)}&result_style=json&page_no=1&page_size=5&title=${encodeURIComponent(cleanTitle)}`;
+        const res = await fetch(url, { next: { revalidate: 3600 } });
+        if (res.ok) {
+          const data = await res.json();
+          const docs = data.docs || data.item || [];
+          for (const d of docs) {
+            const page = parsePageString(d.PAGE || d.FORM_DETAIL || d.FORM);
+            if (page > 0) return page;
+          }
+        }
+      }
+    } catch {
+      // 제목 검색 오류 무시
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * 카카오 도서 검색 + 국립중앙도서관(NL) 쪽수 자동 매핑 하이브리드 엔진
+ */
 async function searchKakao(query: string, kakaoKey: string, nlKey?: string) {
   const isIsbn = /^[0-9Xx-]{10,17}$/.test(query.replace(/\s/g, ''));
   const cleanQuery = query.replace(/-/g, '');
@@ -44,148 +120,34 @@ async function searchKakao(query: string, kakaoKey: string, nlKey?: string) {
   const res = await fetch(url, {
     headers: { Authorization: `KakaoAK ${kakaoKey}` },
   });
-  if (!res.ok) throw new Error(`카카오 API 통신 에러 (${res.status})`);
+  if (!res.ok) throw new Error(`카카오 도서 검색 API 통신 에러 (${res.status})`);
 
   const data = await res.json();
   const rawDocuments = data.documents || [];
 
   return Promise.all(
     rawDocuments.map(async (item: any) => {
-      const firstIsbn = (item.isbn || '').split(' ')[0] || '';
+      const { isbn13, isbn10 } = extractIsbns(item.isbn);
+      const primaryIsbn = isbn13 || isbn10 || item.isbn || '';
+
+      // 국립중앙도서관 쪽수 정밀 연동 (13자리 우선 ➔ 10자리 ➔ 제목 폴백)
       let totalPages = 0;
-      if (firstIsbn && nlKey) {
-        totalPages = await fetchTotalPagesFromNL(firstIsbn, nlKey);
+      if (nlKey) {
+        totalPages = await fetchTotalPagesFromNL(isbn13, isbn10, item.title, nlKey);
       }
+
       return {
-        externalId: item.isbn || '',
-        isbn: firstIsbn,
+        externalId: primaryIsbn,
+        isbn: primaryIsbn,
+        isbn13,
+        isbn10,
         title: item.title || '',
         author: (item.authors || []).join(', '),
         publisher: item.publisher || '',
         totalPages,
         coverUrl: item.thumbnail || '',
-        source: '카카오 + 국립중앙도서관',
+        source: '카카오 도서 + 국립중앙도서관(NL)',
         description: item.contents || '',
-      };
-    })
-  );
-}
-
-// 3. 알라딘 도서 검색 (상세 LookUp 연동으로 쪽수 100% 자동 제공)
-async function searchAladin(query: string, aladinKey: string, nlKey?: string) {
-  const isIsbn = /^[0-9Xx-]{10,17}$/.test(query.replace(/\s/g, ''));
-  const cleanQuery = query.replace(/-/g, '');
-  const url = isIsbn
-    ? `https://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey=${aladinKey}&itemIdType=ISBN13&ItemId=${encodeURIComponent(cleanQuery)}&output=js&Version=20131101&Cover=Big&SubInfo=BookPage`
-    : `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${aladinKey}&Query=${encodeURIComponent(query)}&QueryType=Title&maxResults=8&start=1&output=js&Version=20131101&Cover=Big`;
-
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      Referer: 'https://aladin.co.kr',
-    },
-  });
-  if (!res.ok) throw new Error(`알라딘 통신 에러 (${res.status})`);
-
-  let resText = await res.text();
-  resText = resText.trim();
-  if (resText.endsWith(';')) resText = resText.slice(0, -1);
-
-  if (resText.includes('<!DOCTYPE') || resText.includes('<html')) {
-    throw new Error('알라딘 방화벽 차단 응답입니다. 네이버나 카카오 API로 검색해 보세요.');
-  }
-
-  const data = JSON.parse(resText);
-  if (data.errorCode) throw new Error(`알라딘 에러: ${data.errorMessage}`);
-
-  const rawItems = data.item || [];
-
-  return Promise.all(
-    rawItems.map(async (item: any) => {
-      let totalPages = item.subInfo?.itemPage || item.subInfo?.bookPage || 0;
-      const firstIsbn = item.isbn13 || item.isbn || '';
-
-      // ItemSearch로 검색한 경우 상세 LookUp을 병렬 호출해 정확한 쪽수(itemPage) 추출
-      if (!totalPages && (item.itemId || firstIsbn)) {
-        try {
-          const lookupId = item.itemId || firstIsbn;
-          const idType = item.itemId ? 'ItemId' : 'ISBN13';
-          const lookUpUrl = `https://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey=${aladinKey}&itemIdType=${idType}&ItemId=${encodeURIComponent(lookupId)}&output=js&Version=20131101&Cover=Big&SubInfo=BookPage`;
-          const lRes = await fetch(lookUpUrl, { headers: { Referer: 'https://aladin.co.kr' } });
-          if (lRes.ok) {
-            let lText = await lRes.text();
-            lText = lText.trim();
-            if (lText.endsWith(';')) lText = lText.slice(0, -1);
-            const lData = JSON.parse(lText);
-            const detailItem = lData.item?.[0];
-            if (detailItem?.subInfo?.itemPage || detailItem?.subInfo?.bookPage) {
-              totalPages = Number(detailItem.subInfo.itemPage || detailItem.subInfo.bookPage);
-            }
-          }
-        } catch (e) {
-          // ignore lookup error
-        }
-      }
-
-      // 여전히 쪽수가 0이면 국립중앙도서관 쪽수 조회 폴백
-      if (!totalPages && firstIsbn && nlKey) {
-        totalPages = await fetchTotalPagesFromNL(firstIsbn, nlKey);
-      }
-
-      return {
-        externalId: String(item.itemId || ''),
-        isbn: firstIsbn,
-        title: item.title || '',
-        author: item.author || '',
-        publisher: item.publisher || '',
-        totalPages,
-        coverUrl: (item.cover || '').replace('http://', 'https://'),
-        source: '알라딘 API',
-        description: item.description || '',
-      };
-    })
-  );
-}
-
-// 4. 네이버 도서 검색 (고화질 표지)
-async function searchNaver(query: string, clientId: string, clientSecret: string, nlKey?: string) {
-  const isIsbn = /^[0-9Xx-]{10,17}$/.test(query.replace(/\s/g, ''));
-  const cleanQuery = query.replace(/-/g, '');
-  const url = isIsbn
-    ? `https://openapi.naver.com/v1/search/book_adv.json?d_isbn=${encodeURIComponent(cleanQuery)}`
-    : `https://openapi.naver.com/v1/search/book.json?query=${encodeURIComponent(query)}&display=10`;
-
-  const res = await fetch(url, {
-    headers: {
-      'X-Naver-Client-Id': clientId,
-      'X-Naver-Client-Secret': clientSecret,
-    },
-  });
-  if (!res.ok) throw new Error(`네이버 API 통신 에러 (${res.status})`);
-
-  const data = await res.json();
-  const rawItems = data.items || [];
-
-  return Promise.all(
-    rawItems.map(async (item: any) => {
-      const cleanTitle = (item.title || '').replace(/(<([^>]+)>)/gi, '');
-      const cleanAuthor = (item.author || '').replace(/(<([^>]+)>)/gi, '');
-      const cleanDesc = (item.description || '').replace(/(<([^>]+)>)/gi, '');
-      const firstIsbn = item.isbn || '';
-      let totalPages = 0;
-      if (firstIsbn && nlKey) {
-        totalPages = await fetchTotalPagesFromNL(firstIsbn, nlKey);
-      }
-      return {
-        externalId: firstIsbn,
-        isbn: firstIsbn,
-        title: cleanTitle,
-        author: cleanAuthor,
-        publisher: item.publisher || '',
-        totalPages,
-        coverUrl: item.image || '',
-        source: '네이버 API',
-        description: cleanDesc,
       };
     })
   );
@@ -194,41 +156,59 @@ async function searchNaver(query: string, clientId: string, clientSecret: string
 // 메인 GET 핸들러
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+  const action = searchParams.get('action');
+
+  const kakaoKey = process.env.KAKAO_REST_API_KEY;
+  const nlKey = process.env.NL_API_KEY;
+
+  // 1. 단일 도서 쪽수만 국립중앙도서관에 재조회하는 액션 (도서 선택 시 보정)
+  if (action === 'fetch_pages') {
+    const rawIsbn = searchParams.get('isbn') || '';
+    const title = searchParams.get('title') || '';
+    const { isbn13, isbn10 } = extractIsbns(rawIsbn);
+
+    if (!nlKey) {
+      return NextResponse.json({ ok: false, error: 'NL_API_KEY 미설정', pages: 0 });
+    }
+
+    const pages = await fetchTotalPagesFromNL(isbn13, isbn10, title, nlKey);
+    return NextResponse.json({ ok: true, pages });
+  }
+
+  // 2. 도서 검색 실행
   const query = searchParams.get('query');
-  const type = searchParams.get('type') || 'kakao'; // kakao, aladin, naver
+  const type = searchParams.get('type') || 'kakao';
 
   if (!query) {
     return NextResponse.json({ ok: false, error: '검색어를 입력해 주세요.' }, { status: 400 });
   }
 
-  const kakaoKey = process.env.KAKAO_REST_API_KEY;
-  const aladinKey = process.env.ALADIN_API_KEY;
-  const naverId = process.env.NAVER_CLIENT_ID;
-  const naverSecret = process.env.NAVER_CLIENT_SECRET;
-  const nlKey = process.env.NL_API_KEY;
+  // 알라딘(2026.10.30 종료) / 네이버(2026.07.31 종료) 서비스 종료 안내 및 카카오 자동 안전 폴백
+  let notice: string | null = null;
+  if (type === 'aladin') {
+    notice = '알라딘 도서 검색 Open API는 2026년 10월 30일부로 서비스가 공식 종료되었습니다. 카카오 + 국립중앙도서관 하이브리드 엔진으로 검색합니다.';
+  } else if (type === 'naver') {
+    notice = '네이버 책 검색 API는 2026년 7월 31일부로 서비스가 공식 종료되었습니다. 카카오 + 국립중앙도서관 하이브리드 엔진으로 검색합니다.';
+  }
+
+  if (!kakaoKey) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'KAKAO_REST_API_KEY 환경변수가 설정되지 않았습니다. .env.local 또는 Vercel 설정을 확인해 주세요.',
+      },
+      { status: 400 }
+    );
+  }
 
   try {
-    let books: any[] = [];
-
-    if (type === 'aladin') {
-      if (!aladinKey) {
-        return NextResponse.json({ ok: false, error: 'ALADIN_API_KEY 환경변수가 설정되지 않았습니다.' }, { status: 400 });
-      }
-      books = await searchAladin(query, aladinKey, nlKey);
-    } else if (type === 'naver') {
-      if (!naverId || !naverSecret) {
-        return NextResponse.json({ ok: false, error: 'NAVER_CLIENT_ID 또는 NAVER_CLIENT_SECRET 환경변수가 설정되지 않았습니다.' }, { status: 400 });
-      }
-      books = await searchNaver(query, naverId, naverSecret, nlKey);
-    } else {
-      // 기본값: 카카오 + 국립중앙도서관 쪽수 하이브리드
-      if (!kakaoKey) {
-        return NextResponse.json({ ok: false, error: 'KAKAO_REST_API_KEY 환경변수가 설정되지 않았습니다.' }, { status: 400 });
-      }
-      books = await searchKakao(query, kakaoKey, nlKey);
-    }
-
-    return NextResponse.json({ ok: true, books });
+    const books = await searchKakao(query, kakaoKey, nlKey);
+    return NextResponse.json({
+      ok: true,
+      books,
+      sourceEngine: 'kakao+nl',
+      notice,
+    });
   } catch (error: any) {
     console.error('도서 검색 오류:', error);
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });

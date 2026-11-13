@@ -57,6 +57,11 @@ export default function ManualBookModal({
           </button>
         </div>
 
+        <div className="p-2.5 mb-2 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-stone-700 leading-relaxed">
+          💡 <strong>카카오 + 국립중앙도서관(NL) 하이브리드 연동</strong><br />
+          검색된 도서 선택 시, 표지/서지 정보와 함께 <strong>국립중앙도서관 서지정보 API</strong>에서 총 페이지 수(쪽수)를 자동으로 조회해 채워줍니다. 필요 시 직접 수정할 수도 있습니다.
+        </div>
+
         <form onSubmit={onSubmit} className="space-y-3">
           <label>
             도서명 (제목) *

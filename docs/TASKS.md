@@ -72,4 +72,12 @@
 - [x] 개발로그 복구(v4.2~v4.4) 및 포스트잇 스타일 가로 휠 스크롤 캐러셀 모달(`components/DevLogModal.tsx`) 구현
 - [x] 스포트라이트 포스트잇 가이드 투어 및 서재 macOS Dock 휠 캐러셀 구축
 - [x] UI/UX 레퍼런스, 오픈소스 및 외부 API 저작권 표기 체계화 (`components/AppInfoModals.tsx`, `README.md`)
-- [ ] 프로덕션 빌드(`npm run build`) 및 모바일(390px)/PC(1280px) 브라우저 화면·콘솔 검증
+
+## 10단계: 도서 검색 엔진 현황 반영 & 카카오+국립중앙도서관 하이브리드 엔진 정상화
+- [x] 알라딘(2026.10.30) 및 네이버(2026.07.31) 검색 API 공식 서비스 종료 고지 및 UI/문서 반영
+- [x] 국립중앙도서관(NL) 서지정보 쪽수 추출 엔진 전면 개선 (`app/api/search-books/route.ts` - 13자리 ISBN 우선 파싱, PAGE 정규식 고도화, 3차 제목 폴백)
+- [x] 단일 도서 실시간 쪽수 재조회 엔드포인트(`action=fetch_pages`) 신설 및 도서 선택 시 누락 쪽수 자동 채움 (`app/page.tsx`)
+- [x] 홈 탭(`HomeTab.tsx`) 검색창/안내배지 및 도서 직접 등록 모달(`ManualBookModal.tsx`) 하이브리드 표준 안내 연동
+- [x] 앱 환경 설정 모달(`AppInfoModals.tsx`) 내 카카오+NL 표준 표기 및 알라딘/네이버 종료 비활성화 처리
+- [x] 세팅 가이드(`docs/SETUP_GUIDE.md`), `README.md`, `.env.example` 환경변수 안내 표 및 발급법 최신화
+- [x] Git 커밋 및 GitHub 원격 저장소(`main`) 동기화 푸시

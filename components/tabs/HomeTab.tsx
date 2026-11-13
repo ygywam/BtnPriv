@@ -121,7 +121,11 @@ export default function HomeTab({
   }, [books, logs, insights, currentChallenge]);
 
   const engineLabel =
-    searchApiType === 'aladin' ? '알라딘' : searchApiType === 'kakao' ? '카카오' : '네이버';
+    searchApiType === 'kakao'
+      ? '카카오+국립중앙도서관'
+      : searchApiType === 'aladin'
+      ? '알라딘(종료)'
+      : '네이버(종료)';
 
   return (
     <div className="home-layout">
@@ -145,13 +149,33 @@ export default function HomeTab({
         </button>
       </section>
 
+      {/* 검색 엔진 현황 알림 배지 (알라딘/네이버 서비스 종료 및 카카오+국립중앙도서관 표준 안내) */}
+      <div className="flex flex-wrap items-center justify-between gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50/80 border border-amber-200/70 text-[11px] text-stone-600">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="font-extrabold text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-full text-[10px]">
+            표준 엔진
+          </span>
+          <span className="text-stone-700">
+            <strong>카카오 도서 검색</strong>(표지·서지) + <strong>국립중앙도서관</strong>(총 쪽수 자동 연동)
+          </span>
+        </div>
+        <span className="text-[10px] text-stone-400">
+          ※ 알라딘(2026.10.30) · 네이버(2026.07.31) 검색 API 서비스 공식 종료
+        </span>
+      </div>
+
       {/* 검색 결과 드롭다운 카드 */}
       {searchResults.length > 0 && (
         <section className="panel search-results-panel">
           <div className="flex items-center justify-between gap-2 mb-3">
-            <h3 className="text-sm font-extrabold text-stone-800">
-              검색 결과 ({searchResults.length}권)
-            </h3>
+            <div>
+              <h3 className="text-sm font-extrabold text-stone-800">
+                검색 결과 ({searchResults.length}권)
+              </h3>
+              <p className="text-[11px] text-amber-800 font-medium">
+                💡 카카오 도서 검색 결과에 국립중앙도서관(NL) 서지정보 쪽수가 자동 매핑되어 표시됩니다.
+              </p>
+            </div>
             <button type="button" className="ghost-button text-xs py-1 px-2.5" onClick={onClearSearchResults}>
               닫기
             </button>
@@ -173,7 +197,7 @@ export default function HomeTab({
                   <p className="font-bold text-xs text-stone-900 truncate">{book.title}</p>
                   <p className="text-[11px] text-stone-500 truncate">{book.author} | {book.publisher}</p>
                   <p className="text-[11px] text-amber-800 font-semibold mt-0.5">
-                    {book.totalPages > 0 ? `📖 총 ${book.totalPages}쪽` : '📄 쪽수 확인 필요'}
+                    {book.totalPages > 0 ? `📖 총 ${book.totalPages}쪽 (NL 연동)` : '📄 선택 시 쪽수 자동 확인'}
                   </p>
                 </div>
                 <button

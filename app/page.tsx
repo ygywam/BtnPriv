@@ -18,7 +18,7 @@ import SpotlightTutorial from '@/components/SpotlightTutorial';
 export default function Home() {
   // 1. 테마 및 검색 엔진 상태
   const [theme, setTheme] = useState('theme-base');
-  const [searchApiType, setSearchApiType] = useState<'aladin' | 'kakao' | 'naver'>('aladin');
+  const [searchApiType, setSearchApiType] = useState<'kakao' | 'aladin' | 'naver'>('kakao');
 
   // 2. 핵심 도메인 데이터
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -62,8 +62,11 @@ export default function Home() {
     setTheme(savedTheme);
     document.body.className = savedTheme;
 
-    const savedApiType = (localStorage.getItem('search_api_type') as any) || 'aladin';
+    // 알라딘(2026.10 종료) 및 네이버(2026.07 종료) 서비스 종료에 따라 카카오+국립중앙도서관 표준 엔진 적용
+    const rawApiType = localStorage.getItem('search_api_type');
+    const savedApiType = rawApiType === 'kakao' ? 'kakao' : 'kakao';
     setSearchApiType(savedApiType);
+    localStorage.setItem('search_api_type', 'kakao');
 
     loadInitialData();
   }, []);
@@ -185,14 +188,37 @@ export default function Home() {
     }
   };
 
-  const handleSelectSearchResult = (b: any) => {
+  // 검색 결과 선택 시 확인 모달 열기 + 쪽수 미확보 시 국립중앙도서관(NL) 실시간 재조회
+  const handleSelectSearchResult = async (b: any) => {
     setManualTitle(b.title || '');
     setManualAuthor(b.author || '');
     setManualPublisher(b.publisher || '');
-    setManualPages(b.totalPages > 0 ? b.totalPages : '');
     setManualDesc(b.description || '');
     setManualCover(b.coverUrl || '');
     setManualTargetChallengeId(selectedChallengeId || challenges[0]?.id || '');
+
+    // 1. 이미 국립중앙도서관 쪽수가 파싱되어 있으면 바로 반영
+    if (b.totalPages > 0) {
+      setManualPages(b.totalPages);
+    } else {
+      setManualPages('');
+      // 2. 쪽수가 0이면 국립중앙도서관에 단일 도서 정밀 쪽수 실시간 재조회 (ISBN13 ➔ ISBN10 ➔ 제목)
+      const targetIsbn = b.isbn13 || b.isbn || b.externalId || '';
+      if (targetIsbn || b.title) {
+        try {
+          const res = await fetch(
+            `/api/search-books?action=fetch_pages&isbn=${encodeURIComponent(targetIsbn)}&title=${encodeURIComponent(b.title || '')}`
+          );
+          const pData = await res.json();
+          if (pData.ok && pData.pages > 0) {
+            setManualPages(pData.pages);
+          }
+        } catch {
+          // 재조회 오류 시 수동 입력 유지
+        }
+      }
+    }
+
     setShowManualBookModal(true);
   };
 
