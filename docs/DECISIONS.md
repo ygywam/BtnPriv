@@ -20,3 +20,4 @@
 - 2026-11-12 · 개발로그 포스트잇 Dock 호버 확대 & scroll-snap 스냅백 제거 · `.devlog-postit-track`의 `scroll-snap-type`으로 인한 마우스 휠 스냅백 및 `.devlog-modal-card` 세로 스크롤 간섭을 제거하고, 서재와 동일한 Dock 물결 확대(`getDockCardStyle`)와 가로 휠 스크롤을 적용.
 - 2026-11-12 · 개발로그 휠 관성 보간(rAF) 및 상단 여백·세로 오버플로우 보완 · `overflow-y: hidden` + `padding-top: 64px`로 확대 카드의 트랙 세로 오버플로우를 제거하고, `deltaMode` 보정 + `requestAnimationFrame` 목표치 보간 스크롤로 마우스 휠 감도를 개선.
 - 2026-11-12 · Private GitHub 배포 세팅 및 보안 마스킹·셋업 가이드(`docs/SETUP_GUIDE.md`) 완비 · `.env.example` 내 개인 노션 DB ID를 마스킹하고, 중복 대용량 영상 파일(`.gitignore`) 및 `.env.local` 커밋 차단을 검증한 뒤 배포용 노션 템플릿·API 키 발급·Vercel 배포 안내서를 작성하고 Git 저장소(`main`)를 초기화.
+- 2026-11-13 · UI 레퍼런스·오픈소스·API 저작권 표기(Attribution) 전면 정비 · 모바일 독서 앱 레이아웃 컨셉, macOS Dock 물결 확대 인터랙션, Shadcn UI 캐러셀 패턴의 출처 및 MIT 오픈소스 라이선스, 노션/Gemini/도서 3대 검색 API 약관 및 원저작자 권리(기록조율사 서울외고 조용희)를 `components/AppInfoModals.tsx` 모달과 `README.md`에 명시하도록 결정.

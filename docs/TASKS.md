@@ -65,9 +65,11 @@
 
 ## 9단계: 모바일 & PC UI/UX 전면 리뉴얼 (5대 탭·캘린더·피드·도감)
 - [x] 백엔드 노션 전체 목록 조회 페이지네이션 보완 (`lib/notion.ts`, `/api/books`, `/api/logs`, `/api/insights`)
-- [ ] 반응형 5대 탭 내비게이션 구현 (`components/BottomNav.tsx` - 모바일 하단 고정 바 & PC 상단 탭 바, 작은 글씨/가로폭 넘침 방지)
+- [x] 반응형 5대 탭 내비게이션 구현 (`components/BottomNav.tsx` - 모바일 하단 고정 바 & PC 상단 탭 바, 작은 글씨/가로폭 넘침 방지)
 - [x] 홈 탭 구현 (`components/tabs/HomeTab.tsx`, `components/ChallengeCalendarCard.tsx` - 검색바, 지금 읽는 책, 챌린지 기간 캘린더 & 목표 도넛 차트, 최근 독서기록)
 - [x] 서재 탭·챌린지 탭·피드 탭·도감 탭 컴포넌트 구현 (`LibraryTab.tsx`, `ChallengeTab.tsx`, `FeedTab.tsx`, `DexTab.tsx`)
 - [x] 메인 페이지(`app/page.tsx`) 셸 리팩토링 및 스타일(`app/globals.css`) 모바일/PC 반응형 마무리 (모바일 작은 글씨·overflow 방지)
 - [x] 개발로그 복구(v4.2~v4.4) 및 포스트잇 스타일 가로 휠 스크롤 캐러셀 모달(`components/DevLogModal.tsx`) 구현
+- [x] 스포트라이트 포스트잇 가이드 투어 및 서재 macOS Dock 휠 캐러셀 구축
+- [x] UI/UX 레퍼런스, 오픈소스 및 외부 API 저작권 표기 체계화 (`components/AppInfoModals.tsx`, `README.md`)
 - [ ] 프로덕션 빌드(`npm run build`) 및 모바일(390px)/PC(1280px) 브라우저 화면·콘솔 검증

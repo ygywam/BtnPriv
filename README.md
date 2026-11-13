@@ -86,3 +86,35 @@ npm run dev
 
 ## 👤 만든이
 - **기록조율사 서울외고 조용희** ([@record_tuner](https://www.instagram.com/record_tuner/))
+
+---
+
+## ⚖️ 저작권 및 레퍼런스 이용 표기 (Attribution & Licenses)
+
+### 1. 원저작자 및 서비스 소유권 (Original Creator)
+- 본 웹앱의 서비스 기획, 독서 주파수 튜닝 컨셉, 1주 1권 노션 챌린지 템플릿 연동 구조, Gemini AI 리포트 및 프롬프트 엔지니어링에 관한 권리는 **기록조율사 서울외고 조용희**([@record_tuner](https://www.instagram.com/record_tuner/))에게 있습니다.
+
+### 2. UI/UX 디자인 및 인터랙션 레퍼런스
+- **모바일 독서 기록 앱 레이아웃 컨셉**: 모바일 독서 웹/앱의 직관적인 사용자 경험(지금 읽는 책 진도 카드, 월별 독서 캘린더 & 목표 도넛 차트 위젯, 최근 기록 피드) 구조 아이디어를 차용하여 북튜닝 고유의 아틀리에 디자인 시스템으로 독자 재구현했습니다.
+- **macOS Dock 물결 확대(Fish-eye) 서재**: Apple macOS Dock의 인터랙션 메타포를 참고하여 마우스 호버 시 중심 도서와 인접 도서가 물결 모양으로 유기적으로 확대되는 인터랙션을 순수 React와 CSS로 구현했습니다.
+- **Shadcn UI & Animated Carousel 패턴**: [shadcn/ui](https://ui.shadcn.com/) 및 [Embla Carousel](https://www.embla-carousel.com/) 쇼케이스 카드의 정보 배치와 포스트잇 가로 스크롤 레이아웃 패턴을 참고하여 외부 무거운 라이브러리 없이 순수 경량 컴포넌트로 재해석하여 탑재했습니다.
+
+### 3. 오픈소스 소프트웨어 라이선스 (Open Source)
+본 프로젝트는 아래의 오픈소스 라이선스를 준수합니다:
+- **Next.js (v14.2)**: MIT License (© Vercel, Inc.)
+- **React & React DOM (v18.3)**: MIT License (© Meta Platforms, Inc.)
+- **Tailwind CSS (v3.4)**: MIT License (© Tailwind Labs, Inc.)
+- **Notion SDK for JavaScript (@notionhq/client)**: MIT License (© Notion Labs, Inc.)
+- **Radix UI & Lucide Icons Iconography**: MIT License
+
+### 4. 외부 API 서비스 이용약관 준수
+- **Notion API**: Notion Labs, Inc. API Terms & Privacy Policy (개인 노션 데이터베이스 실시간 동기화)
+- **Google Gemini API**: Google APIs Terms of Service & Generative AI Additional Terms (독서 리포트·블로그 생성 및 본문 사진 OCR)
+- **알라딘 도서 검색 Open API**: (주)알라딘커뮤니케이션 TTB API 약관 (도서 정보 및 전체 쪽수 연동)
+- **카카오 도서 검색 API**: Kakao Corp. 오픈API 이용약관
+- **네이버 도서 검색 API**: NAVER Corp. 오픈API 이용약관
+- **국립중앙도서관 Open API**: 국립중앙도서관 공공데이터 이용조건
+
+### 5. 도서 서지 데이터 및 표지 이미지 저작권
+- 도서 검색 및 서재에 표시되는 책 표지 이미지, 소개글, 출판사 및 저자 정보의 저작권은 해당 원저작자 및 출판사에 귀속되며, 본 서비스는 개인의 비영리 독서 기록 및 공정 이용(Fair Use) 범위 내에서만 해당 정보를 안전하게 표시합니다.
+

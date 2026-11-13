@@ -142,26 +142,67 @@ export default function AppInfoModals({
       {showCopyrightModal && (
         <div className="modal">
           <div className="modal-backdrop" onClick={() => setShowCopyrightModal(false)} />
-          <div className="modal-card" style={{ maxWidth: '560px' }}>
+          <div className="modal-card" style={{ maxWidth: '620px' }}>
             <div className="section-title-row">
               <div>
-                <h2 style={{ color: 'var(--accent-dark)' }}>⚖️ 저작권 및 이용 안내</h2>
+                <h2 style={{ color: 'var(--accent-dark)' }}>⚖️ 저작권 및 레퍼런스 이용 안내</h2>
+                <p className="subtitle">북튜닝에서 활용한 기획 권리, UI 레퍼런스, 오픈소스 및 API 라이선스 표기입니다.</p>
               </div>
               <button type="button" className="ghost-button" onClick={() => setShowCopyrightModal(false)}>
                 닫기
               </button>
             </div>
-            <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-2 text-xs leading-relaxed text-stone-700">
-              <p>
-                <strong>1. 권리자 (소유권)</strong>
-                <br />
-                본 앱의 기획, 화면 설계 및 핵심 프롬프트 구조에 대한 모든 권리는 &apos;기록조율사 서울외고 조용희&apos;에게 있습니다.
-              </p>
-              <p>
-                <strong>2. 외부 API 라이선스 준수</strong>
-                <br />
-                본 앱은 노션, 알라딘, 카카오, 네이버, Google Gemini API 등을 개인적·교육적 목적으로 안전하게 이용하고 있습니다.
-              </p>
+            <div className="space-y-4 max-h-[62vh] overflow-y-auto pr-2 text-xs leading-relaxed text-stone-700">
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                <h4 className="font-bold text-amber-950 text-xs mb-1">1. 원저작자 및 서비스 소유권 (Original Creator)</h4>
+                <p>
+                  본 웹앱의 서비스 기획, 독서 주파수 튜닝 컨셉, 1주 1권 노션 챌린지 템플릿 연동 아키텍처 및 Gemini AI 리포트 프롬프트에 관한 모든 권리는 <strong>&apos;기록조율사 서울외고 조용희&apos;</strong>(<a href="https://www.instagram.com/record_tuner/" target="_blank" rel="noreferrer" className="text-amber-800 underline font-semibold">@record_tuner</a>)에게 있습니다.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-stone-900 text-xs mb-1">2. UI/UX 디자인 및 인터랙션 레퍼런스</h4>
+                <ul className="list-disc pl-4 space-y-1 text-stone-600">
+                  <li>
+                    <strong>모바일 독서 기록 앱 레이아웃 컨셉</strong>: 모바일 독서 웹/앱의 직관적인 사용자 경험(지금 읽는 책 진도 카드, 월간 독서 캘린더 및 목표 도넛 차트 위젯) 구조 아이디어를 차용하여 북튜닝 아틀리에 무드로 독자 재구현했습니다.
+                  </li>
+                  <li>
+                    <strong>macOS Dock 물결 확대(Fish-eye) 서재</strong>: Apple macOS Dock 인터랙션 메타포를 참고하여 서재 도서 호버 시 중심 도서와 인접 도서가 부드럽게 유기적으로 확대되는 인터랙션을 순수 CSS와 React로 구현했습니다.
+                  </li>
+                  <li>
+                    <strong>Shadcn UI & Animated Carousel 패턴</strong>: shadcn/ui 및 Embla Carousel 쇼케이스 카드 패턴의 정보 배치 및 포스트잇 캐러셀 구조를 참고하여 외부 의존성 없이 가로 휠 스크롤 컴포넌트로 경량화하여 탑재했습니다.
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-stone-900 text-xs mb-1">3. 오픈소스 소프트웨어 라이선스 (Open Source)</h4>
+                <p className="mb-1 text-stone-600">본 서비스는 다음의 오픈소스 소프트웨어를 준수하여 개발되었습니다:</p>
+                <ul className="list-disc pl-4 space-y-0.5 text-stone-600">
+                  <li><strong>Next.js (v14.2)</strong> - MIT License (© Vercel, Inc.)</li>
+                  <li><strong>React & React DOM (v18.3)</strong> - MIT License (© Meta Platforms, Inc.)</li>
+                  <li><strong>Tailwind CSS (v3.4)</strong> - MIT License (© Tailwind Labs, Inc.)</li>
+                  <li><strong>Notion SDK for JavaScript (@notionhq/client)</strong> - MIT License (© Notion Labs, Inc.)</li>
+                  <li><strong>Radix UI & Lucide Icons Iconography</strong> - MIT License</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-stone-900 text-xs mb-1">4. 외부 API 서비스 이용약관 준수</h4>
+                <ul className="list-disc pl-4 space-y-0.5 text-stone-600">
+                  <li><strong>Notion API</strong>: Notion Labs, Inc. API Terms & Privacy Policy 준수 (개인 서재 DB 양방향 동기화)</li>
+                  <li><strong>Google Gemini API</strong>: Google APIs Terms of Service 준수 (개인 감상문/월간 리포트 생성 및 사진 OCR)</li>
+                  <li><strong>알라딘 도서 검색 Open API</strong>: (주)알라딘커뮤니케이션 TTB API 약관 준수 (도서 서지 정보 및 쪽수 연동)</li>
+                  <li><strong>카카오 도서 검색 API</strong>: Kakao Corp. 오픈API 이용약관 준수</li>
+                  <li><strong>네이버 검색 API</strong>: NAVER Corp. 오픈API 이용약관 준수</li>
+                  <li><strong>국립중앙도서관 Open API</strong>: 국립중앙도서관 공공데이터 이용조건 준수</li>
+                </ul>
+              </div>
+
+              <div className="p-2.5 bg-stone-50 rounded-xl border border-stone-200 text-[11px] text-stone-500">
+                💡 <strong>도서 서지 정보 및 표지 이미지 저작권</strong><br />
+                검색 및 서재에 노출되는 도서 표지, 도서 소개, 서지 데이터의 저작권은 해당 원저작자 및 출판사에 귀속되며, 본 서비스는 개인의 비영리 독서 기록 및 공정 이용(Fair Use) 범위 내에서만 해당 정보를 표시합니다.
+              </div>
             </div>
           </div>
         </div>
