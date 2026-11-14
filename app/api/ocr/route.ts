@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { GEMINI_MODEL } from '@/lib/gemini';
 
 export async function POST(request: Request) {
   try {
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
 2. 오타나 오인식이 없도록 한 글자 한 글자 정확히 판독할 것.
 3. 문단 줄바꿈은 원래 이미지의 구조를 최대한 반영할 것.`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
     const payload = {
       contents: [
         {

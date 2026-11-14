@@ -1,13 +1,14 @@
 // Google Gemini API 호출 유틸리티 (서버 사이드 전용)
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = 'gemini-2.5-flash';
+// 공식 지원 모델 상수: Google AI Studio 무료/표준 최신 모델
+export const GEMINI_MODEL = 'gemini-3.8-flash';
 
 export async function callGemini(prompt: string, base64Image?: string, mimeType: string = 'image/jpeg'): Promise<string> {
-  if (!GEMINI_API_KEY) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
     throw new Error('GEMINI_API_KEY 환경변수가 설정되지 않았습니다.');
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
   const contents: any[] = [];
   const parts: any[] = [];

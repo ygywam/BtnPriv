@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { notion, NOTION_LOG_DB_ID as LOG_DB_ID, NOTION_INSIGHT_DB_ID as INSIGHT_DB_ID } from '@/lib/notion';
+import { GEMINI_MODEL } from '@/lib/gemini';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,7 +112,7 @@ ${pageSummary || '없음'}
 
 지침: 1인칭 주인공 어조 확립, 제3자 말투 금지, 마크다운 기호 금지. 빈 줄(엔터)만 사용.`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

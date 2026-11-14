@@ -6,7 +6,7 @@
 - 실행 환경: Next.js 14 (App Router) + Vercel / Node.js
 - 프로젝트 유형: 데이터처리·대시보드
 - 형태: B 빌드 도구 (Next.js)
-- 기술 스택과 버전: Next.js 14.2, React 18, TypeScript, Tailwind CSS, Notion API (@notionhq/client), Gemini 2.5 Flash, Kakao 도서 검색 & 국립중앙도서관 서지정보 API
+- 기술 스택과 버전: Next.js 14.2, React 18, TypeScript, Tailwind CSS, Notion API (@notionhq/client), Gemini 3.8 Flash, Kakao 도서 검색 & 국립중앙도서관 서지정보 API
 - 인터넷 연결 필요 여부: 필수 (Notion API, Kakao 도서 검색 API, 국립중앙도서관 API, Gemini API)
 - 개인정보 취급 여부: 없음 (개인 전용 서재, 닉네임/개인정보 미수집)
 - 검증 방법: `npm run dev` 실행 후 도서/일지/문장 기록 시 해당 월 챌린지 자동 생성 및 양방향 Relation 매핑 검증
@@ -34,5 +34,6 @@
 - [x] 도서 등록 시 노션 '표지' 속성과 함께 최상단 '페이지 커버' 동시 저장
 - [x] 알라딘(2026.10.30 종료) 및 네이버(2026.07.31 종료) 서비스 종료 공식 고지 및 UI/설정 안전화
 - [x] 카카오(표지/서지) + 국립중앙도서관(13자리 ISBN 기반 쪽수 파싱) 하이브리드 엔진 정상화 및 실시간 쪽수 자동 채움 검증 완료
+- [x] Gemini 3.8 Flash 모델 공식 지원 최신화 및 단일 상수(`lib/gemini.ts`) 관리 구축
 
 > 여기 적힌 기술 스택은 확정 사항이다. 사용자 승인 없이 변경하거나 다른 라이브러리를 추가하지 않는다.

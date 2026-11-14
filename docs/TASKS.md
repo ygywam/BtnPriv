@@ -87,3 +87,9 @@
 - [x] 독서 캘린더 요일 순서를 일요일 시작(`S M T W T F S`)으로 전환하여 11월 1일 등 날짜 표시 정합성 개선 (`components/ChallengeCalendarCard.tsx`)
 - [x] 캘린더 날짜 클릭 시 하단 독서기록 프리뷰의 2줄 말줄임(`line-clamp-2`, `truncate`)을 제거하고 본문 전체를 줄바꿈(`whitespace-pre-wrap break-words`)으로 온전히 표기 (`ChallengeCalendarCard.tsx`, `globals.css`)
 - [x] Git 커밋 및 GitHub 원격 저장소(`main`) 동기화 푸시
+
+## 12단계: Gemini AI 최신 공식 모델(`gemini-3.8-flash`) 마이그레이션 & 상수 단일화
+- [x] Google AI Studio 최신 무료/표준 지원 모델(`gemini-3.8-flash`) 공식 규격 검증 및 적용
+- [x] 모델명을 `lib/gemini.ts`의 `GEMINI_MODEL` 단일 상수로 통합하여 전역 관리 구축 (`callGemini`, `ocr/route.ts`, `ai-report/route.ts`)
+- [x] `PROJECT.md` 및 `README.md` 기술 스택 명세 갱신
+- [x] Git 커밋 및 GitHub 원격 저장소(`main`) 동기화 푸시
