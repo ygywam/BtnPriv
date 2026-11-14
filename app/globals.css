@@ -1559,7 +1559,8 @@ p {
 .cal-day-detail-item p {
   font-size: 11.5px;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.5;
+  word-break: break-word;
 }
 
 .cal-tag-log,

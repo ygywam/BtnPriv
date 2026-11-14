@@ -345,8 +345,8 @@ export default function ChallengeCalendarCard({
                     onClick={() => book && onSelectBook(book)}
                   >
                     <span className="cal-tag-log">일지 · {l.page}p</span>
-                    <strong className="truncate">{book?.title || '도서'}</strong>
-                    <p className="line-clamp-2">{l.content}</p>
+                    <strong className="break-words">{book?.title || '도서'}</strong>
+                    <p className="whitespace-pre-wrap break-words leading-relaxed">{l.content}</p>
                   </div>
                 );
               })}
@@ -359,8 +359,8 @@ export default function ChallengeCalendarCard({
                     onClick={() => book && onSelectBook(book)}
                   >
                     <span className="cal-tag-insight">문장 · {ins.page || '-'}</span>
-                    <strong className="truncate">{book?.title || '도서'}</strong>
-                    <p className="line-clamp-2">“{ins.quote}”</p>
+                    <strong className="break-words">{book?.title || '도서'}</strong>
+                    <p className="whitespace-pre-wrap break-words leading-relaxed">“{ins.quote}”</p>
                   </div>
                 );
               })}

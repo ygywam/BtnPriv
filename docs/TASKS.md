@@ -82,7 +82,8 @@
 - [x] 세팅 가이드(`docs/SETUP_GUIDE.md`), `README.md`, `.env.example` 환경변수 안내 표 및 발급법 최신화
 - [x] Git 커밋 및 GitHub 원격 저장소(`main`) 동기화 푸시
 
-## 11단계: 개인정보처리방침 표준화 보강 및 캘린더 일요일 시작 개편
+## 11단계: 개인정보처리방침 표준화 보강 및 캘린더 일요일 시작·독서기록 전체 표시 개편
 - [x] 개인정보보호 표준 점검 체크리스트 및 그룹 북튜닝 8대 조항 기반 개인정보처리방침 전면 보강 (`components/AppInfoModals.tsx`)
 - [x] 독서 캘린더 요일 순서를 일요일 시작(`S M T W T F S`)으로 전환하여 11월 1일 등 날짜 표시 정합성 개선 (`components/ChallengeCalendarCard.tsx`)
+- [x] 캘린더 날짜 클릭 시 하단 독서기록 프리뷰의 2줄 말줄임(`line-clamp-2`, `truncate`)을 제거하고 본문 전체를 줄바꿈(`whitespace-pre-wrap break-words`)으로 온전히 표기 (`ChallengeCalendarCard.tsx`, `globals.css`)
 - [x] Git 커밋 및 GitHub 원격 저장소(`main`) 동기화 푸시
