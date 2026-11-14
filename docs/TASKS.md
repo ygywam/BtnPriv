@@ -92,4 +92,5 @@
 - [x] Google AI Studio 최신 무료/표준 지원 모델(`gemini-3.8-flash`) 공식 규격 검증 및 적용
 - [x] 모델명을 `lib/gemini.ts`의 `GEMINI_MODEL` 단일 상수로 통합하여 전역 관리 구축 (`callGemini`, `ocr/route.ts`, `ai-report/route.ts`)
 - [x] `PROJECT.md` 및 `README.md` 기술 스택 명세 갱신
+- [x] 도서 상세 모달 내 특정 버전명 제거 및 UI 타이틀 정돈 (`Gemini 2.5 AI 독서감상문` ➔ `AI 독서감상문`, `BookDetailModal.tsx`)
 - [x] Git 커밋 및 GitHub 원격 저장소(`main`) 동기화 푸시

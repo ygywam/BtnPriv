@@ -740,7 +740,7 @@ export default function BookDetailModal({
             <div className="space-y-4">
               <div className="p-4 bg-orange-50 rounded-2xl border border-orange-200 flex items-center justify-between">
                 <div>
-                  <h4 className="font-bold text-sm text-orange-950">Gemini 2.5 AI 독서감상문</h4>
+                  <h4 className="font-bold text-sm text-orange-950">AI 독서감상문</h4>
                   <p className="text-xs text-orange-800 mt-0.5">
                     내가 작성한 일지 메모들을 종합하여 완성도 높은 감상문 초안을 집필합니다.
                   </p>
