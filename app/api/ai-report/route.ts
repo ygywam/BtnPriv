@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { notion, NOTION_LOG_DB_ID as LOG_DB_ID, NOTION_INSIGHT_DB_ID as INSIGHT_DB_ID } from '@/lib/notion';
-import { GEMINI_MODEL } from '@/lib/gemini';
+import { callGemini } from '@/lib/gemini';
 
 export const dynamic = 'force-dynamic';
 
@@ -112,20 +112,7 @@ ${pageSummary || '없음'}
 
 지침: 1인칭 주인공 어조 확립, 제3자 말투 금지, 마크다운 기호 금지. 빈 줄(엔터)만 사용.`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`Gemini API 통신 오류 (${res.status}): ${errText}`);
-    }
-
-    const data = await res.json();
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const generatedText = await callGemini(prompt);
 
     // 노션 해당 도서 페이지 본문에 감상문 블록 추가 (기존 블록 정리 후 새 블록 추가)
     if (notionPageId && generatedText) {

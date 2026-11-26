@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GEMINI_MODEL } from '@/lib/gemini';
+import { callGemini } from '@/lib/gemini';
 
 export async function POST(request: Request) {
   try {
@@ -30,36 +30,7 @@ export async function POST(request: Request) {
 2. 오타나 오인식이 없도록 한 글자 한 글자 정확히 판독할 것.
 3. 문단 줄바꿈은 원래 이미지의 구조를 최대한 반영할 것.`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
-    const payload = {
-      contents: [
-        {
-          parts: [
-            { text: prompt },
-            {
-              inline_data: {
-                mime_type: detectedMime,
-                data: rawBase64,
-              },
-            },
-          ],
-        },
-      ],
-    };
-
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`Gemini OCR 통신 오류 (${res.status}): ${errText}`);
-    }
-
-    const data = await res.json();
-    const ocrText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const ocrText = await callGemini(prompt, rawBase64, detectedMime);
 
     return NextResponse.json({
       ok: true,
