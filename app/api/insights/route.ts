@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { notion, NOTION_INSIGHT_DB_ID, uploadImageToNotion, queryAllNotionDatabase } from '@/lib/notion';
+import { notion, NOTION_INSIGHT_DB_ID, uploadImageToNotion, queryAllNotionDatabase, buildRichTextChunks } from '@/lib/notion';
 import { getOrCreateChallengeByDate } from '@/lib/challengeHelper';
 import { Insight } from '@/lib/types';
 
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
 
     const properties: any = {
       '내용': {
-        title: [{ type: 'text', text: { content: quote } }],
+        title: buildRichTextChunks(quote),
       },
       '페이지': {
         rich_text: [{ type: 'text', text: { content: String(page || '') } }],
@@ -176,6 +176,52 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('문장수집 등록 오류:', error);
     return NextResponse.json({ error: error.message || '문장수집 등록 실패' }, { status: 500 });
+  }
+}
+
+// PATCH /api/insights - 문장수집 수정 (노션 페이지 업데이트)
+export async function PATCH(req: NextRequest) {
+  try {
+    if (!NOTION_INSIGHT_DB_ID) {
+      return NextResponse.json({ error: 'NOTION_INSIGHT_DB_ID 미설정' }, { status: 500 });
+    }
+
+    const body = await req.json();
+    const { id, quote, page, date } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: '수정할 문장수집 ID가 없습니다.' }, { status: 400 });
+    }
+    if (quote !== undefined && !String(quote).trim()) {
+      return NextResponse.json({ error: '문장 내용은 필수입니다.' }, { status: 400 });
+    }
+
+    const properties: any = {};
+    if (quote !== undefined) {
+      properties['내용'] = {
+        title: buildRichTextChunks(String(quote)),
+      };
+    }
+    if (page !== undefined) {
+      properties['페이지'] = {
+        rich_text: [{ type: 'text', text: { content: String(page || '') } }],
+      };
+    }
+    if (date) {
+      properties['읽은날짜'] = {
+        date: { start: String(date) },
+      };
+    }
+
+    const updatedPage = await notion.pages.update({
+      page_id: id,
+      properties,
+    });
+
+    return NextResponse.json({ insight: parseInsightPage(updatedPage) });
+  } catch (error: any) {
+    console.error('문장수집 수정 오류:', error);
+    return NextResponse.json({ error: error.message || '문장수집 수정 실패' }, { status: 500 });
   }
 }
 

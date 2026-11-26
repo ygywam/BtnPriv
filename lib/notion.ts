@@ -11,6 +11,24 @@ export const NOTION_LOG_DB_ID = process.env.NOTION_LOG_DB_ID || '';
 export const NOTION_INSIGHT_DB_ID = process.env.NOTION_INSIGHT_DB_ID || '';
 
 /**
+ * Notion rich_text / title 속성의 단일 텍스트 블록 2,000자 제한을 우회하기 위해
+ * 긴 문자열을 2,000자 단위 rich_text 배열로 분할하는 헬퍼
+ */
+export function buildRichTextChunks(text: string, chunkSize = 2000) {
+  if (!text) {
+    return [{ type: 'text' as const, text: { content: '' } }];
+  }
+  const chunks: Array<{ type: 'text'; text: { content: string } }> = [];
+  for (let i = 0; i < text.length; i += chunkSize) {
+    chunks.push({
+      type: 'text',
+      text: { content: text.slice(i, i + chunkSize) },
+    });
+  }
+  return chunks;
+}
+
+/**
  * Base64 이미지 데이터를 노션 공식 file_uploads API를 통해 업로드하고 file_upload id를 반환하는 함수
  */
 export async function uploadImageToNotion(base64Data: string, customFilename?: string): Promise<string> {

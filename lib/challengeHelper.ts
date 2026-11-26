@@ -76,7 +76,7 @@ export async function getOrCreateChallengeByDate(dateStr?: string): Promise<Chal
         },
         '상태': {
           status: {
-            name: '진행중',
+            name: '진행 중',
           },
         },
       },

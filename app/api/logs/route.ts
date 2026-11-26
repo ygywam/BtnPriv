@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { notion, NOTION_LOG_DB_ID, uploadImageToNotion, queryAllNotionDatabase } from '@/lib/notion';
+import { notion, NOTION_LOG_DB_ID, uploadImageToNotion, queryAllNotionDatabase, buildRichTextChunks } from '@/lib/notion';
 import { getOrCreateChallengeByDate } from '@/lib/challengeHelper';
 import { ReadingLog } from '@/lib/types';
 
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
         number: page ? Number(page) : 0,
       },
       '독서 감상록': {
-        rich_text: [{ type: 'text', text: { content: content || '' } }],
+        rich_text: buildRichTextChunks(content || ''),
       },
       '관련 책': {
         relation: [{ id: bookId }],
@@ -171,6 +171,49 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('독서일지 작성 오류:', error);
     return NextResponse.json({ error: error.message || '독서일지 작성 실패' }, { status: 500 });
+  }
+}
+
+// PATCH /api/logs - 독서일지 수정 (노션 페이지 업데이트)
+export async function PATCH(req: NextRequest) {
+  try {
+    if (!NOTION_LOG_DB_ID) {
+      return NextResponse.json({ error: 'NOTION_LOG_DB_ID 미설정' }, { status: 500 });
+    }
+
+    const body = await req.json();
+    const { id, date, page, content } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: '수정할 일지 ID가 없습니다.' }, { status: 400 });
+    }
+
+    const properties: any = {};
+    if (date !== undefined) {
+      properties['읽은 날짜'] = {
+        title: [{ type: 'text', text: { content: String(date) } }],
+      };
+    }
+    if (page !== undefined) {
+      properties['이번에 읽은 페이지(숫자)'] = {
+        number: page ? Number(page) : 0,
+      };
+    }
+    if (content !== undefined) {
+      properties['독서 감상록'] = {
+        rich_text: buildRichTextChunks(String(content)),
+      };
+    }
+
+    const updatedPage = await notion.pages.update({
+      page_id: id,
+      properties,
+    });
+
+    return NextResponse.json({ log: parseLogPage(updatedPage) });
+  } catch (error: any) {
+    console.error('독서일지 수정 오류:', error);
+    return NextResponse.json({ error: error.message || '독서일지 수정 실패' }, { status: 500 });
   }
 }
 

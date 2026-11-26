@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Book, ReadingLog, Insight, Challenge } from '@/lib/types';
 
 interface BookDetailModalProps {
@@ -40,6 +40,36 @@ export default function BookDetailModal({
 
   // OCR 상태
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+
+  // 수정 중인 일지/문장수집 ID (null이면 신규 작성)
+  const [editingLogId, setEditingLogId] = useState<string | null>(null);
+  const [editingInsightId, setEditingInsightId] = useState<string | null>(null);
+
+  // 입력칸 자동 높이 조절 ref
+  const formTopRef = useRef<HTMLDivElement>(null);
+  const logTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const insightTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const adjustTextareaHeight = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    const maxHeight = typeof window !== 'undefined' ? Math.min(window.innerHeight * 0.45, 420) : 360;
+    const nextHeight = Math.min(el.scrollHeight, maxHeight);
+    el.style.height = `${nextHeight}px`;
+    el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
+  };
+
+  useEffect(() => {
+    if (activeForm === 'log') {
+      adjustTextareaHeight(logTextareaRef.current);
+    }
+  }, [logContent, activeForm]);
+
+  useEffect(() => {
+    if (activeForm === 'insight') {
+      adjustTextareaHeight(insightTextareaRef.current);
+    }
+  }, [insightQuote, activeForm]);
 
   // AI 독서감상문
   const [aiReport, setAiReport] = useState('');
@@ -107,7 +137,45 @@ export default function BookDetailModal({
     }
   };
 
-  // 독서일지 작성 제출
+  const resetLogForm = () => {
+    setEditingLogId(null);
+    setLogDate(new Date().toISOString().slice(0, 10));
+    setLogPage('');
+    setLogContent('');
+    setLogImageUrl('');
+  };
+
+  const resetInsightForm = () => {
+    setEditingInsightId(null);
+    setInsightQuote('');
+    setInsightPage('');
+    setInsightDate(new Date().toISOString().slice(0, 10));
+    setInsightImageUrl('');
+  };
+
+  const handleStartEditLog = (item: { id: string; date: string; page: number; content: string }) => {
+    setEditingInsightId(null);
+    setEditingLogId(item.id);
+    setLogDate(item.date || new Date().toISOString().slice(0, 10));
+    setLogPage(item.page ?? '');
+    setLogContent(item.content || '');
+    setLogImageUrl('');
+    setActiveForm('log');
+    formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  const handleStartEditInsight = (item: { id: string; date: string; page: string; content: string }) => {
+    setEditingLogId(null);
+    setEditingInsightId(item.id);
+    setInsightDate(item.date || new Date().toISOString().slice(0, 10));
+    setInsightPage(item.page || '');
+    setInsightQuote(item.content || '');
+    setInsightImageUrl('');
+    setActiveForm('insight');
+    formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  // 독서일지 작성/수정 제출
   const handleSubmitLog = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!logPage || !logContent.trim()) {
@@ -117,28 +185,39 @@ export default function BookDetailModal({
 
     setSubmittingLog(true);
     try {
+      const isEdit = Boolean(editingLogId);
       const res = await fetch('/api/logs', {
-        method: 'POST',
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bookId: book.id,
-          date: logDate,
-          page: Number(logPage),
-          content: logContent,
-          challengeId: currentChallengeId,
-          imageUrl: logImageUrl,
-        }),
+        body: JSON.stringify(
+          isEdit
+            ? {
+                id: editingLogId,
+                date: logDate,
+                page: Number(logPage),
+                content: logContent,
+              }
+            : {
+                bookId: book.id,
+                date: logDate,
+                page: Number(logPage),
+                content: logContent,
+                challengeId: currentChallengeId,
+                imageUrl: logImageUrl,
+              }
+        ),
       });
 
-      if (!res.ok) throw new Error('일지 작성 실패');
-      setLogContent('');
-      setLogPage('');
-      setLogImageUrl('');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || (isEdit ? '일지 수정 실패' : '일지 작성 실패'));
+      }
+      resetLogForm();
       setActiveForm('none');
       await loadBookItems();
       onRefresh();
     } catch (err: any) {
-      alert(err.message || '일지 작성 중 오류 발생');
+      alert(err.message || '일지 저장 중 오류 발생');
     } finally {
       setSubmittingLog(false);
     }
@@ -157,7 +236,7 @@ export default function BookDetailModal({
     }
   };
 
-  // 문장수집 제출
+  // 문장수집 작성/수정 제출
   const handleSubmitInsight = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!insightQuote.trim()) {
@@ -167,28 +246,39 @@ export default function BookDetailModal({
 
     setSubmittingInsight(true);
     try {
+      const isEdit = Boolean(editingInsightId);
       const res = await fetch('/api/insights', {
-        method: 'POST',
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bookId: book.id,
-          quote: insightQuote,
-          page: insightPage,
-          date: insightDate,
-          challengeId: currentChallengeId,
-          imageUrl: insightImageUrl,
-        }),
+        body: JSON.stringify(
+          isEdit
+            ? {
+                id: editingInsightId,
+                quote: insightQuote,
+                page: insightPage,
+                date: insightDate,
+              }
+            : {
+                bookId: book.id,
+                quote: insightQuote,
+                page: insightPage,
+                date: insightDate,
+                challengeId: currentChallengeId,
+                imageUrl: insightImageUrl,
+              }
+        ),
       });
 
-      if (!res.ok) throw new Error('문장수집 실패');
-      setInsightQuote('');
-      setInsightPage('');
-      setInsightImageUrl('');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || (isEdit ? '문장수집 수정 실패' : '문장수집 실패'));
+      }
+      resetInsightForm();
       setActiveForm('none');
       await loadBookItems();
       onRefresh();
     } catch (err: any) {
-      alert(err.message || '문장수집 중 오류 발생');
+      alert(err.message || '문장수집 저장 중 오류 발생');
     } finally {
       setSubmittingInsight(false);
     }
@@ -423,10 +513,18 @@ export default function BookDetailModal({
           {activeTab === 'timeline' && (
             <div className="space-y-4">
               {/* 상단 간편 등록 버튼 (2버튼 체제) */}
-              <div className="flex gap-2">
+              <div ref={formTopRef} className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setActiveForm((prev) => (prev === 'log' ? 'none' : 'log'))}
+                  onClick={() => {
+                    if (activeForm === 'log') {
+                      resetLogForm();
+                      setActiveForm('none');
+                    } else {
+                      resetLogForm();
+                      setActiveForm('log');
+                    }
+                  }}
                   className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm ${
                     activeForm === 'log'
                       ? 'bg-amber-700 text-white shadow-inner'
@@ -438,7 +536,15 @@ export default function BookDetailModal({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setActiveForm((prev) => (prev === 'insight' ? 'none' : 'insight'))}
+                  onClick={() => {
+                    if (activeForm === 'insight') {
+                      resetInsightForm();
+                      setActiveForm('none');
+                    } else {
+                      resetInsightForm();
+                      setActiveForm('insight');
+                    }
+                  }}
                   className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm ${
                     activeForm === 'insight'
                       ? 'bg-emerald-700 text-white shadow-inner'
@@ -455,7 +561,7 @@ export default function BookDetailModal({
                 <form onSubmit={handleSubmitLog} className="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 space-y-3 animate-fadeIn">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-amber-950 flex items-center gap-1">
-                      <span>📖</span> 새 독서일지 작성
+                      <span>📖</span> {editingLogId ? '독서일지 수정' : '새 독서일지 작성'}
                     </span>
                     <div className="flex items-center gap-2">
                       <label className="text-xs font-semibold text-amber-700 hover:text-amber-800 cursor-pointer flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-amber-200">
@@ -506,11 +612,12 @@ export default function BookDetailModal({
 
                   <div>
                     <textarea
+                      ref={logTextareaRef}
                       rows={3}
                       placeholder="오늘 읽은 내용과 나의 생각을 자유롭게 남겨보세요..."
                       value={logContent}
                       onChange={(e) => setLogContent(e.target.value)}
-                      className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white box-border text-stone-900"
+                      className="w-full min-h-[96px] px-3 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white box-border text-stone-900 resize-none leading-relaxed"
                       required
                     ></textarea>
                   </div>
@@ -523,21 +630,34 @@ export default function BookDetailModal({
                     </div>
                   )}
 
-                  <div className="flex justify-end gap-2.5 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setActiveForm('none')}
-                      className="px-3.5 py-2 text-xs font-bold rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 transition"
-                    >
-                      취소
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={submittingLog || isOcrProcessing}
-                      className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow transition disabled:opacity-50"
-                    >
-                      {submittingLog ? '저장 중...' : '독서일지 저장'}
-                    </button>
+                  <div className="flex items-center justify-between gap-2.5 pt-1">
+                    <div className="text-xs text-stone-500 font-medium">
+                      <span className={logContent.length > 2000 ? 'text-amber-700 font-bold' : ''}>
+                        {logContent.length.toLocaleString()}자
+                      </span>
+                      {logContent.length > 2000 && (
+                        <span className="ml-1.5 text-[11px] text-amber-700">· 노션 자동 분할 저장</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetLogForm();
+                          setActiveForm('none');
+                        }}
+                        className="px-3.5 py-2 text-xs font-bold rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 transition"
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={submittingLog || isOcrProcessing}
+                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow transition disabled:opacity-50"
+                      >
+                        {submittingLog ? '저장 중...' : editingLogId ? '수정 완료' : '독서일지 저장'}
+                      </button>
+                    </div>
                   </div>
                 </form>
               )}
@@ -547,7 +667,7 @@ export default function BookDetailModal({
                 <form onSubmit={handleSubmitInsight} className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 space-y-3 animate-fadeIn">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-emerald-950 flex items-center gap-1">
-                      <span>💡</span> 새 문장 수집하기
+                      <span>💡</span> {editingInsightId ? '문장수집 수정' : '새 문장 수집하기'}
                     </span>
                     <div className="flex items-center gap-2">
                       <label className="text-xs font-semibold text-emerald-800 hover:text-emerald-900 cursor-pointer flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-emerald-200">
@@ -596,11 +716,12 @@ export default function BookDetailModal({
 
                   <div>
                     <textarea
+                      ref={insightTextareaRef}
                       rows={4}
                       placeholder="기억하고 싶은 인상 깊은 문장과 나의 단상을 입력하세요..."
                       value={insightQuote}
                       onChange={(e) => setInsightQuote(e.target.value)}
-                      className="w-full px-3 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white box-border text-stone-900"
+                      className="w-full min-h-[112px] px-3 py-2.5 text-sm rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white box-border text-stone-900 resize-none leading-relaxed"
                       required
                     ></textarea>
                   </div>
@@ -613,21 +734,34 @@ export default function BookDetailModal({
                     </div>
                   )}
 
-                  <div className="flex justify-end gap-2.5 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setActiveForm('none')}
-                      className="px-3.5 py-2 text-xs font-bold rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 transition"
-                    >
-                      취소
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={submittingInsight || isOcrProcessing}
-                      className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow transition disabled:opacity-50"
-                    >
-                      {submittingInsight ? '저장 중...' : '문장 저장'}
-                    </button>
+                  <div className="flex items-center justify-between gap-2.5 pt-1">
+                    <div className="text-xs text-stone-500 font-medium">
+                      <span className={insightQuote.length > 2000 ? 'text-emerald-700 font-bold' : ''}>
+                        {insightQuote.length.toLocaleString()}자
+                      </span>
+                      {insightQuote.length > 2000 && (
+                        <span className="ml-1.5 text-[11px] text-emerald-700">· 노션 자동 분할 저장</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetInsightForm();
+                          setActiveForm('none');
+                        }}
+                        className="px-3.5 py-2 text-xs font-bold rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 transition"
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={submittingInsight || isOcrProcessing}
+                        className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow transition disabled:opacity-50"
+                      >
+                        {submittingInsight ? '저장 중...' : editingInsightId ? '수정 완료' : '문장 저장'}
+                      </button>
+                    </div>
                   </div>
                 </form>
               )}
@@ -685,14 +819,31 @@ export default function BookDetailModal({
                               <span className="text-stone-400">·</span>
                               <span className="text-stone-500">{item.date}</span>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteLog(item.id)}
-                              className="text-stone-400 hover:text-rose-600 transition p-1 text-xs font-medium"
-                              title="독서일지 삭제"
-                            >
-                              삭제 🗑️
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleStartEditLog({
+                                    id: item.id,
+                                    date: item.date,
+                                    page: Number(item.page) || 0,
+                                    content: item.content,
+                                  })
+                                }
+                                className="text-stone-400 hover:text-amber-700 transition p-1 text-xs font-medium"
+                                title="독서일지 수정"
+                              >
+                                수정 ✏️
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteLog(item.id)}
+                                className="text-stone-400 hover:text-rose-600 transition p-1 text-xs font-medium"
+                                title="독서일지 삭제"
+                              >
+                                삭제 🗑️
+                              </button>
+                            </div>
                           </div>
                           <p className="text-sm text-stone-800 whitespace-pre-line leading-relaxed pl-1">
                             {item.content}
@@ -715,14 +866,31 @@ export default function BookDetailModal({
                               <span className="text-stone-400">·</span>
                               <span className="text-stone-500">{item.date}</span>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteInsight(item.id)}
-                              className="text-stone-400 hover:text-rose-600 transition p-1 text-xs font-medium"
-                              title="문장수집 삭제"
-                            >
-                              삭제 🗑️
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleStartEditInsight({
+                                    id: item.id,
+                                    date: item.date,
+                                    page: String(item.page || ''),
+                                    content: item.content,
+                                  })
+                                }
+                                className="text-stone-400 hover:text-emerald-700 transition p-1 text-xs font-medium"
+                                title="문장수집 수정"
+                              >
+                                수정 ✏️
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteInsight(item.id)}
+                                className="text-stone-400 hover:text-rose-600 transition p-1 text-xs font-medium"
+                                title="문장수집 삭제"
+                              >
+                                삭제 🗑️
+                              </button>
+                            </div>
                           </div>
                           <blockquote className="text-sm text-stone-800 italic border-l-4 border-emerald-500 pl-3 leading-relaxed whitespace-pre-line bg-white/60 p-2.5 rounded-r-xl">
                             {item.content}
