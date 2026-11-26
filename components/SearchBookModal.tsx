@@ -27,6 +27,7 @@ export default function SearchBookModal({
   const [editAuthor, setEditAuthor] = useState('');
   const [editPublisher, setEditPublisher] = useState('');
   const [editTotalPage, setEditTotalPage] = useState<number | ''>('');
+  const [editDescription, setEditDescription] = useState('');
   const [editCover, setEditCover] = useState('');
   const [editRating, setEditRating] = useState('⭐⭐⭐⭐⭐');
   const [targetChallengeId, setTargetChallengeId] = useState(currentChallengeId);
@@ -59,6 +60,7 @@ export default function SearchBookModal({
     setEditAuthor(book.author || '');
     setEditPublisher(book.publisher || '');
     setEditTotalPage(book.totalPages ? Number(book.totalPages) : '');
+    setEditDescription(book.description || '');
     setEditCover(book.coverUrl || '');
   };
 
@@ -79,6 +81,7 @@ export default function SearchBookModal({
           author: editAuthor,
           publisher: editPublisher,
           totalPage: editTotalPage ? Number(editTotalPage) : 0,
+          description: editDescription,
           cover: editCover,
           rating: editRating,
           challengeId: targetChallengeId,
@@ -270,6 +273,16 @@ export default function SearchBookModal({
                       </option>
                     ))}
                   </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium text-stone-700 mb-1">책소개</label>
+                  <textarea
+                    rows={3}
+                    placeholder="도서 소개 내용을 확인·입력하세요"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 bg-white leading-relaxed"
+                  />
                 </div>
               </div>
 

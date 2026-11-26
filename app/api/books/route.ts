@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { notion, NOTION_BOOK_DB_ID, queryAllNotionDatabase } from '@/lib/notion';
+import { notion, NOTION_BOOK_DB_ID, queryAllNotionDatabase, buildRichTextChunks } from '@/lib/notion';
 import { getOrCreateChallengeByDate } from '@/lib/challengeHelper';
 import { Book } from '@/lib/types';
 
@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
 
     if (description) {
       properties['책소개'] = {
-        rich_text: [{ type: 'text', text: { content: description } }],
+        rich_text: buildRichTextChunks(String(description)),
       };
     }
 
@@ -235,7 +235,78 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { action, bookId, targetChallengeId, fromChallengeId, toChallengeId, cover } = body;
+    const {
+      action,
+      bookId,
+      targetChallengeId,
+      fromChallengeId,
+      toChallengeId,
+      cover,
+      title,
+      author,
+      publisher,
+      totalPage,
+      description,
+    } = body;
+
+    // -1. 도서 상세 정보 전체 수정 (제목, 저자, 출판사, 전체 페이지수, 책소개, 표지)
+    if (action === 'updateBook') {
+      if (!bookId) {
+        return NextResponse.json({ error: 'bookId가 필요합니다.' }, { status: 400 });
+      }
+      if (title !== undefined && !String(title).trim()) {
+        return NextResponse.json({ error: '책 제목은 필수입니다.' }, { status: 400 });
+      }
+
+      const properties: any = {};
+      if (title !== undefined) {
+        properties['*책 제목'] = {
+          title: [{ type: 'text', text: { content: String(title).trim() } }],
+        };
+      }
+      if (author !== undefined) {
+        properties['저자'] = {
+          rich_text: [{ type: 'text', text: { content: String(author) } }],
+        };
+      }
+      if (publisher !== undefined) {
+        properties['출판사'] = {
+          rich_text: [{ type: 'text', text: { content: String(publisher) } }],
+        };
+      }
+      if (totalPage !== undefined) {
+        properties['*전체 페이지수'] = {
+          number: totalPage ? Number(totalPage) : 0,
+        };
+      }
+      if (description !== undefined) {
+        properties['책소개'] = {
+          rich_text: buildRichTextChunks(String(description)),
+        };
+      }
+
+      const updatePayload: any = {
+        page_id: bookId,
+        properties,
+      };
+
+      if (cover && String(cover).startsWith('http')) {
+        properties['표지'] = {
+          files: [{ name: 'cover.jpg', type: 'external', external: { url: String(cover) } }],
+        };
+        updatePayload.cover = {
+          type: 'external',
+          external: { url: String(cover) },
+        };
+      }
+
+      const updatedPage = await notion.pages.update(updatePayload);
+      return NextResponse.json({
+        success: true,
+        book: parseBookPage(updatedPage),
+        message: '도서 정보가 노션에 성공적으로 수정되었습니다.',
+      });
+    }
 
     // 0. 도서 표지 업데이트 (노션 속성 및 페이지 커버 동시 반영)
     if (action === 'updateCover' || (bookId && cover)) {

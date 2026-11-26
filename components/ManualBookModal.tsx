@@ -13,6 +13,8 @@ interface ManualBookModalProps {
   setManualPublisher: (v: string) => void;
   manualPages: number | '';
   setManualPages: (v: number | '') => void;
+  manualDesc: string;
+  setManualDesc: (v: string) => void;
   manualCover: string;
   setManualCover: (v: string) => void;
   manualTargetChallengeId: string;
@@ -35,6 +37,8 @@ export default function ManualBookModal({
   setManualPublisher,
   manualPages,
   setManualPages,
+  manualDesc,
+  setManualDesc,
   manualCover,
   setManualCover,
   manualTargetChallengeId,
@@ -123,14 +127,34 @@ export default function ManualBookModal({
           </div>
 
           <label>
-            표지 이미지 URL (선택)
-            <input
-              type="text"
-              placeholder="https://..."
-              value={manualCover}
-              onChange={(e) => setManualCover(e.target.value)}
+            책소개
+            <textarea
+              rows={3}
+              placeholder="도서 줄거리나 소개 내용을 확인·입력하세요"
+              value={manualDesc}
+              onChange={(e) => setManualDesc(e.target.value)}
+              className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 bg-white leading-relaxed"
             />
           </label>
+
+          <div className="flex items-end gap-3">
+            {manualCover && manualCover.startsWith('http') && (
+              <img
+                src={manualCover}
+                alt="표지 미리보기"
+                className="w-12 h-16 object-cover rounded-lg border border-stone-200 flex-shrink-0"
+              />
+            )}
+            <label className="flex-1">
+              표지 이미지 URL (선택)
+              <input
+                type="text"
+                placeholder="https://..."
+                value={manualCover}
+                onChange={(e) => setManualCover(e.target.value)}
+              />
+            </label>
+          </div>
 
           <button
             type="submit"

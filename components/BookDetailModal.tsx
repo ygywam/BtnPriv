@@ -82,6 +82,25 @@ export default function BookDetailModal({
   const [updatingChallenge, setUpdatingChallenge] = useState(false);
   const latestChallenge = challenges[0] || null;
 
+  // 도서 정보 확인/수정 패널 상태
+  const [showBookInfoPanel, setShowBookInfoPanel] = useState(false);
+  const [editBookTitle, setEditBookTitle] = useState(book.title || '');
+  const [editBookAuthor, setEditBookAuthor] = useState(book.author || '');
+  const [editBookPublisher, setEditBookPublisher] = useState(book.publisher || '');
+  const [editBookTotalPage, setEditBookTotalPage] = useState<number | ''>(book.totalPage || '');
+  const [editBookCover, setEditBookCover] = useState(book.cover || '');
+  const [editBookDescription, setEditBookDescription] = useState(book.description || '');
+  const [savingBookInfo, setSavingBookInfo] = useState(false);
+
+  useEffect(() => {
+    setEditBookTitle(book.title || '');
+    setEditBookAuthor(book.author || '');
+    setEditBookPublisher(book.publisher || '');
+    setEditBookTotalPage(book.totalPage || '');
+    setEditBookCover(book.cover || '');
+    setEditBookDescription(book.description || '');
+  }, [book]);
+
   // 이미지 캔버스 압축 헬퍼
   const compressImage = (file: File, maxWidth = 1200, quality = 0.8): Promise<string> => {
     return new Promise((resolve) => {
@@ -376,12 +395,55 @@ export default function BookDetailModal({
 
     try {
       const res = await fetch(`/api/books?id=${book.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('삭제 실패');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || '삭제 실패');
+      }
       alert('도서가 삭제되었습니다.');
       onClose();
       onRefresh();
     } catch (err: any) {
       alert('삭제 중 오류: ' + err.message);
+    }
+  };
+
+  // 도서 상세 정보 수정 (노션 DB 반영)
+  const handleSaveBookInfo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editBookTitle.trim()) {
+      alert('책 제목은 필수입니다.');
+      return;
+    }
+
+    setSavingBookInfo(true);
+    try {
+      const res = await fetch('/api/books', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'updateBook',
+          bookId: book.id,
+          title: editBookTitle.trim(),
+          author: editBookAuthor.trim(),
+          publisher: editBookPublisher.trim(),
+          totalPage: editBookTotalPage ? Number(editBookTotalPage) : 0,
+          cover: editBookCover.trim(),
+          description: editBookDescription.trim(),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || '도서 정보 수정 실패');
+      }
+
+      alert('도서 정보가 노션에 수정되었습니다.');
+      setShowBookInfoPanel(false);
+      onRefresh();
+    } catch (err: any) {
+      alert('도서 정보 수정 오류: ' + err.message);
+    } finally {
+      setSavingBookInfo(false);
     }
   };
 
@@ -482,14 +544,133 @@ export default function BookDetailModal({
               </div>
             </div>
           </div>
-          <button
-            type="button"
-            className="px-4 py-2 text-xs font-bold rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 transition"
-            onClick={onClose}
-          >
-            닫기
-          </button>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowBookInfoPanel((prev) => !prev)}
+              className={`px-2.5 py-2 text-xs font-bold rounded-xl border transition ${
+                showBookInfoPanel
+                  ? 'bg-amber-600 text-white border-amber-600'
+                  : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200'
+              }`}
+              title="도서 정보 확인 및 수정"
+            >
+              {showBookInfoPanel ? '관리 닫기' : '도서 관리 ✏️'}
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteBook}
+              className="px-2.5 py-2 text-xs font-bold rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition"
+              title="서재에서 도서 삭제"
+            >
+              삭제 🗑️
+            </button>
+            <button
+              type="button"
+              className="px-3 py-2 text-xs font-bold rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 transition"
+              onClick={onClose}
+            >
+              닫기
+            </button>
+          </div>
         </div>
+
+        {/* 도서 정보 확인 및 수정 패널 */}
+        {showBookInfoPanel && (
+          <form
+            onSubmit={handleSaveBookInfo}
+            className="mt-3 p-4 bg-stone-50 rounded-2xl border border-stone-200 space-y-3 overflow-y-auto max-h-[45vh]"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-stone-800">📚 도서 상세 정보 확인 및 수정</span>
+              <span className="text-[11px] text-stone-500">수정 내용은 노션 DB에 바로 반영됩니다</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-bold text-stone-600 mb-1">책 제목 *</label>
+                <input
+                  type="text"
+                  value={editBookTitle}
+                  onChange={(e) => setEditBookTitle(e.target.value)}
+                  className="w-full px-3 py-1.5 text-sm rounded-xl border border-stone-300 bg-white text-stone-900"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-stone-600 mb-1">저자</label>
+                <input
+                  type="text"
+                  value={editBookAuthor}
+                  onChange={(e) => setEditBookAuthor(e.target.value)}
+                  className="w-full px-3 py-1.5 text-sm rounded-xl border border-stone-300 bg-white text-stone-900"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-stone-600 mb-1">출판사</label>
+                <input
+                  type="text"
+                  value={editBookPublisher}
+                  onChange={(e) => setEditBookPublisher(e.target.value)}
+                  className="w-full px-3 py-1.5 text-sm rounded-xl border border-stone-300 bg-white text-stone-900"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-stone-600 mb-1">전체 페이지수 (쪽)</label>
+                <input
+                  type="number"
+                  value={editBookTotalPage}
+                  onChange={(e) => setEditBookTotalPage(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full px-3 py-1.5 text-sm rounded-xl border border-stone-300 bg-white text-stone-900"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-stone-600 mb-1">표지 이미지 URL</label>
+                <input
+                  type="text"
+                  placeholder="https://..."
+                  value={editBookCover}
+                  onChange={(e) => setEditBookCover(e.target.value)}
+                  className="w-full px-3 py-1.5 text-sm rounded-xl border border-stone-300 bg-white text-stone-900"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-bold text-stone-600 mb-1">책소개</label>
+                <textarea
+                  rows={3}
+                  placeholder="등록된 책소개가 없습니다. 내용을 입력해 보세요."
+                  value={editBookDescription}
+                  onChange={(e) => setEditBookDescription(e.target.value)}
+                  className="w-full px-3 py-2 text-sm rounded-xl border border-stone-300 bg-white text-stone-900 leading-relaxed"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowBookInfoPanel(false)}
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-700 transition"
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                disabled={savingBookInfo}
+                className="px-4 py-1.5 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow transition disabled:opacity-50"
+              >
+                {savingBookInfo ? '저장 중...' : '도서 정보 저장'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {!showBookInfoPanel && book.description && (
+          <div className="mt-2.5 px-3 py-2 bg-stone-50/80 rounded-xl border border-stone-200/80 text-xs text-stone-600 leading-relaxed line-clamp-2">
+            <span className="font-bold text-stone-700 mr-1.5">책소개</span>
+            {book.description}
+          </div>
+        )}
 
         {/* 탭 네비게이션 */}
         <div className="library-tabs" style={{ marginTop: '12px', marginBottom: '14px' }}>

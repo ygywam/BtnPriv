@@ -475,6 +475,8 @@ export default function Home() {
           setManualPublisher={setManualPublisher}
           manualPages={manualPages}
           setManualPages={setManualPages}
+          manualDesc={manualDesc}
+          setManualDesc={setManualDesc}
           manualCover={manualCover}
           setManualCover={setManualCover}
           manualTargetChallengeId={manualTargetChallengeId}
