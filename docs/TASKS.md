@@ -94,3 +94,9 @@
 - [x] `PROJECT.md` 및 `README.md` 기술 스택 명세 갱신
 - [x] 도서 상세 모달 내 특정 버전명 제거 및 UI 타이틀 정돈 (`Gemini 2.5 AI 독서감상문` ➔ `AI 독서감상문`, `BookDetailModal.tsx`)
 - [x] Git 커밋 및 GitHub 원격 저장소(`main`) 동기화 푸시
+
+## 13단계: Gemini 2.5 지원 종료 대응 및 최신 공식 모델(`gemini-3.5-flash-lite`, `gemini-3.8-flash`) 확정
+- [x] Gemini 2.5 계열 공식 404 NOT_FOUND 및 지원 종료 확인
+- [x] 구글 공식 권장 모델인 `gemini-3.5-flash-lite` 및 최신 `gemini-3.8-flash`로 폴백 목록 전면 개편 (`lib/gemini.ts`)
+- [x] 모델 미지원(404) 발생 시 다음 최신 모델로 즉시 자동 우회하도록 RETRYABLE_STATUS 보강
+- [x] Git 커밋 및 GitHub 원격 저장소(`main`) 동기화 푸시

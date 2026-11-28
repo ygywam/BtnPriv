@@ -1,15 +1,13 @@
 // Google Gemini API 호출 유틸리티 (서버 사이드 전용)
-// 경량·고속 모델부터 시작해 과부하(503/429) 시 상위 모델로 자동 폴백
+// 2.5 지원 종료에 따른 Google AI Studio 공식 최신 지원 모델 라인업
 export const GEMINI_FALLBACK_MODELS = [
-  'gemini-2.5-flash-lite',
   'gemini-3.5-flash-lite',
-  'gemini-3.7-flash',
   'gemini-3.8-flash',
 ] as const;
 
 export const GEMINI_MODEL = GEMINI_FALLBACK_MODELS[0];
 
-const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+const RETRYABLE_STATUS = new Set([404, 429, 500, 502, 503, 504]);
 
 export async function callGemini(prompt: string, base64Image?: string, mimeType: string = 'image/jpeg'): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
